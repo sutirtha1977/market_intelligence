@@ -39,6 +39,9 @@ THEME = {
 
 # Each section gets its own accent: (main, dark, soft tint, gradient end)
 SECTION_ACCENTS = {
+    "home":                   ("#4F46E5", "#312E81", "#E0E7FF", "#818CF8"),
+    "global_overview":        ("#0891B2", "#164E63", "#CFFAFE", "#22D3EE"),
+    "usa_equity":             ("#E11D48", "#9F1239", "#FFE4E6", "#FB7185"),
     "india_equity":           (color("blue-60", "#2563EB"),   color("blue-80", "#1E3A8A"),     "#DBEAFE", "#38BDF8"),
     "nse_index_overview":     (color("teal-50", "#0D9488"),   color("teal-90", "#134E4A"),     "#CCFBF1", "#22D3EE"),
     "derivative_dashboard":   (color("orange-70", "#EA580C"), color("orange-90", "#9A3412"),   "#FFEDD5", "#FB923C"),
@@ -201,6 +204,11 @@ def get_app_css():
         border: 1px solid var(--accent-soft, #DBEAFE);
         box-shadow: 0 4px 12px var(--accent-shadow, rgba(37, 99, 235, 0.18));
         font-size: 1.35rem;
+    }}
+
+    .section-icon i {{
+        color: var(--accent, #2563EB);
+        line-height: 1;
     }}
 
     .section-text {{
@@ -410,7 +418,7 @@ def setup_page():
 def initialize_session_state():
 
     defaults = {
-        "current_menu": "india_equity",
+        "current_menu": "home",
         "current_operation": None,
     }
 
@@ -433,15 +441,23 @@ def handle_menu_change(selected_menu):
 # SECTION HEADER
 # ============================================================================
 
+def _icon_html(icon):
+    """Bootstrap icon name (e.g. 'graph-up-arrow') or an emoji."""
+    icon = str(icon)
+    if icon.isascii() and icon.replace("-", "").isalnum():
+        return f'<i class="bi bi-{escape(icon)}"></i>'
+    return escape(icon)
+
+
 def render_section_header(
     title,
     subtitle=None,
-    icon="📊"
+    icon="graph-up-arrow"
 ):
 
     safe_title = escape(str(title))
     safe_subtitle = escape(str(subtitle)) if subtitle else ""
-    safe_icon = escape(icon)
+    safe_icon = _icon_html(icon)
     today = datetime.now().strftime("%d %b %Y")
 
     st.html(f"""
@@ -481,7 +497,10 @@ def render_sidebar_header():
 def render_sidebar_menu():
 
     menu_options = [
+        "Home",
+        "Global Trends",
         "INDIA Equity",
+        "USA Equity",
         "NSE Indices",
         "NSE FnO",
         "Equity Signals",
@@ -491,7 +510,10 @@ def render_sidebar_menu():
     ]
 
     icons = [
+        "house-fill",
+        "globe",
         "bar-chart-fill",
+        "currency-dollar",
         "graph-up-arrow",
         "lightning-charge-fill",
         "search-heart-fill",
@@ -501,7 +523,10 @@ def render_sidebar_menu():
     ]
 
     menu_map = {
+        "Home": "home",
+        "Global Trends": "global_overview",
         "INDIA Equity": "india_equity",
+        "USA Equity": "usa_equity",
         "NSE Indices": "nse_index_overview",
         "NSE FnO": "derivative_dashboard",
         "Equity Signals": "scanner_operations",
@@ -519,7 +544,7 @@ def render_sidebar_menu():
 
     default_option = reverse_menu_map.get(
         current_menu,
-        "INDIA Equity"
+        "Home"
     )
 
     default_index = menu_options.index(default_option)
@@ -576,60 +601,107 @@ def render_sidebar_menu():
             }
         )
 
-    return menu_map.get(menu_choice, "india_equity")
+    return menu_map.get(menu_choice, "home")
 
 
 # ============================================================================
 # CONTENT ROUTING
 # ============================================================================
 
-SECTION_CONTENT = {
-    "india_equity": (
-        "INDIA EQUITY",
-        "Indian stock market analysis and portfolio tracking",
-        "📊",
-    ),
-    "nse_index_overview": (
-        "INDEX TRACKING",
-        "India's national stock exchange indices",
-        "📈",
-    ),
-    "derivative_dashboard": (
-        "F&O INSIGHTS",
-        "Futures, options, and derivatives trading",
-        "⚡",
-    ),
-    "scanner_operations": (
-        "TRADE SIGNALS",
-        "Automated trading signal detection",
-        "🎯",
-    ),
-    "backtesting_operations": (
-        "STRATEGY TESTING",
-        "Validate trading strategies with historical data",
-        "🕒",
-    ),
-    "playground": (
-        "STRATEGY BUILDER",
-        "Experiment with custom trading strategies",
-        "🧠",
-    ),
-    "admin_operations": (
-        "SYSTEM SETTINGS",
-        "Configuration and system management",
-        "⚙️",
-    ),
-}
-
-
 def render_content_box(menu):
 
-    section = SECTION_CONTENT.get(menu)
-    if section is None:
-        st.warning(f"Unknown application section: {escape(str(menu))}")
-        return
+    if menu == "home":
+        render_section_header(
+            "MARKET OVERVIEW",
+            "Real-time market insights and performance analytics",
+            "graph-up-arrow"
+        )
+        # from operations.main_dashboard.home_view import handle_home_operations
+        # handle_home_operations()
 
-    render_section_header(*section)
+    elif menu == "global_overview":
+        render_section_header(
+            "GLOBAL TRENDS",
+            "International market trends and correlations",
+            "globe"
+        )
+        # from operations.global_dashboard.global_overview_ops import handle_dashboard_ops
+        # handle_dashboard_ops()
+
+    elif menu == "india_equity":
+        render_section_header(
+            "INDIA EQUITY",
+            "Indian stock market analysis and portfolio tracking",
+            "bar-chart-fill"
+        )
+        # from operations.main_dashboard.equity_view import equity_view
+        # equity_view(asset_key="yahoo_india_equity", region_prefix="india")
+
+    elif menu == "usa_equity":
+        render_section_header(
+            "USA EQUITY",
+            "US stock market analysis and portfolio tracking",
+            "currency-dollar"
+        )
+        # from operations.main_dashboard.equity_view import equity_view
+        # equity_view(asset_key="yahoo_usa_equity", region_prefix="usa")
+
+    elif menu == "nse_index_overview":
+        render_section_header(
+            "INDEX TRACKING",
+            "India's national stock exchange indices",
+            "graph-up-arrow"
+        )
+        # from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
+        # handle_index_overview_operations()
+
+    elif menu == "derivative_dashboard":
+        render_section_header(
+            "F&O INSIGHTS",
+            "Futures, options, and derivatives trading",
+            "lightning-fill"
+        )
+        # from operations.derivatives_operations.derivative_ops import handle_derivative_operations
+        # handle_derivative_operations()
+
+    elif menu == "scanner_operations":
+        render_section_header(
+            "TRADE SIGNALS",
+            "Automated trading signal detection",
+            "search"
+        )
+        # from operations.scanners.scanner_ops import handle_scanner_operations
+        # handle_scanner_operations()
+
+    elif menu == "backtesting_operations":
+        render_section_header(
+            "STRATEGY TESTING",
+            "Validate strategies with historical data",
+            "clock-history"
+        )
+        # from operations.scanners.backtest_ops import handle_scanner_backtest_operations
+        # handle_scanner_backtest_operations()
+
+    elif menu == "playground":
+        render_section_header(
+            "STRATEGY BUILDER",
+            "Experiment with custom strategies",
+            "cpu"
+        )
+        # from operations.playground_ops import handle_playground_operations
+        # handle_playground_operations()
+
+    elif menu == "admin_operations":
+        render_section_header(
+            "SYSTEM SETTINGS",
+            "Configuration and system management",
+            "gear-fill"
+        )
+        from operations.admin_operations.admin_ops import handle_admin_operations
+        handle_admin_operations()
+
+    else:
+        st.warning(f"Unknown application section: {escape(str(menu))}")
 
 
 # ============================================================================

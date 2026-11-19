@@ -1,0 +1,87 @@
+[2026-11-19 17:14:26] [INFO    ] [stock_market:105] [98834:6418460672] Creating Equity database, drop=False
+[2026-11-19 17:14:26] [INFO    ] [stock_market:105] [98834:6418460672] ========== DATABASE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] PostgreSQL connection pool initialized (2-10)
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING MASTER TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 Creating currency_master table
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ currency_master ready | Inserted: 16 | Total configured: 16
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING SYMBOL TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== SYMBOL TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_india_equity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_india_equity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_india_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_india_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: nse_india_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: nse_india_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_usa_equity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_usa_equity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_global_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_global_index_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_commodity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_commodity_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_crypto_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_crypto_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating symbol table: yahoo_forex_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Symbol table ready: yahoo_forex_symbols
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 All symbol tables created successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING PRICE TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== PRICE TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_india_equity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_india_equity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_usa_equity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_usa_equity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_global_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_global_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_india_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_india_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_commodity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_commodity_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_crypto_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_crypto_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: yahoo_forex_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: yahoo_forex_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating price table: nse_india_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Price table ready: nse_india_index_price
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 All price tables created successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING INDICATOR TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== INDICATOR TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_india_equity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_india_equity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_usa_equity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_usa_equity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_global_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_global_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_india_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_india_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_commodity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_commodity_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_crypto_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_crypto_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: yahoo_forex_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: yahoo_forex_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating indicator table: nse_india_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Indicator table ready: nse_india_index_indicators
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 All indicator tables created successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING INDEX TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== NSE INDEX TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating nse_india_index_constituents
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Constituents table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating nse_india_index_srt
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Index SRT table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating nse_holidays
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ NSE holidays table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 All NSE index tables created successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING VIX TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== NSE VIX TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 nse_vix_features table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ⚡ VIX regime index ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ⚡ VIX signal index ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 NSE VIX table setup completed successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== CREATING SCANNER TABLES ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== SCANNER TABLE SETUP START ==========
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating scanner_signals_weekly
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Weekly scanner table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 📦 Creating scanner_signals
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ Unified scanner table ready
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] 🚀 All scanner tables created successfully
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ✅ DATABASE TRANSACTION COMMITTED
+[2026-11-19 17:14:27] [INFO    ] [stock_market:105] [98834:6418460672] ========== DATABASE SETUP COMPLETE ==========

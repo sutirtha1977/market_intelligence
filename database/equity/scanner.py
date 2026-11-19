@@ -1,69 +1,69 @@
+
 # database/equity/scanner.py
 
 from config.logger import log
 
-def create_scanner_tables(cur):
 
-    try:
+# =========================================================
+# CREATE WEEKLY SCANNER SIGNALS
+# =========================================================
 
-        # =====================================================
-        # WEEKLY SCANNER SIGNALS
-        # =====================================================
-        cur.execute("""
+def create_weekly_scanner_table(cur):
+
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS scanner_signals_weekly (
+
             asset_type TEXT NOT NULL,
             scanner_type TEXT NOT NULL,
             symbol_id INTEGER NOT NULL,
             signal_date DATE NOT NULL,
 
-            breakout_high REAL,
-            breakout_close REAL,
-            current_close REAL,
+            breakout_high DOUBLE PRECISION,
+            breakout_close DOUBLE PRECISION,
+            current_close DOUBLE PRECISION,
 
-            rsi_3 REAL,
-            rsi_9 REAL,
-            ema_rsi_9_3 REAL,
-            wma_rsi_9_21 REAL,
+            rsi_3 DOUBLE PRECISION,
+            rsi_9 DOUBLE PRECISION,
+            ema_rsi_9_3 DOUBLE PRECISION,
+            wma_rsi_9_21 DOUBLE PRECISION,
 
-            is_triggered BOOLEAN DEFAULT FALSE,
+            is_triggered BOOLEAN NOT NULL DEFAULT FALSE,
             trigger_date DATE,
 
-            PRIMARY KEY(asset_type, scanner_type, symbol_id, signal_date)
+            PRIMARY KEY (
+                asset_type,
+                scanner_type,
+                symbol_id,
+                signal_date
+            )
+
         );
-        """)
+    """)
 
-        log("📦 Created scanner_signals_weekly table")
+    # -----------------------------------------------------
+    # PENDING SIGNALS
+    # -----------------------------------------------------
 
-        # 🔥 Optimized pending scan
-        cur.execute("""
+    cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_sws_pending
-        ON scanner_signals_weekly(asset_type, scanner_type, signal_date)
+        ON scanner_signals_weekly (
+            asset_type,
+            scanner_type,
+            signal_date DESC
+        )
         WHERE is_triggered = FALSE;
-        """)
+    """)
 
-        log("⚡ Created idx_sws_pending")
 
-        # 🔥 Fast lookup / upsert support
-        cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_sws_lookup
-        ON scanner_signals_weekly(asset_type, scanner_type, symbol_id, signal_date);
-        """)
+# =========================================================
+# CREATE UNIFIED SCANNER SIGNALS
+# =========================================================
 
-        log("⚡ Created idx_sws_lookup")
+def create_unified_scanner_table(cur):
 
-        # 🔥 Trigger update performance
-        cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_sws_trigger_scan
-        ON scanner_signals_weekly(asset_type, scanner_type, is_triggered);
-        """)
-
-        log("⚡ Created idx_sws_trigger_scan")
-
-        # =====================================================
-        # UNIFIED SCANNER SIGNALS (1d / 1wk / 1mo)
-        # =====================================================
-        cur.execute("""
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS scanner_signals (
+
             asset_type TEXT NOT NULL,
             scanner_type TEXT NOT NULL,
             scanner_freq TEXT NOT NULL,
@@ -71,14 +71,14 @@ def create_scanner_tables(cur):
             symbol_id INTEGER NOT NULL,
             signal_date DATE NOT NULL,
 
-            breakout_high REAL,
-            breakout_close REAL,
-            current_close REAL,
+            breakout_high DOUBLE PRECISION,
+            breakout_close DOUBLE PRECISION,
+            current_close DOUBLE PRECISION,
 
-            rsi_3 REAL,
-            rsi_9 REAL,
-            ema_rsi_9_3 REAL,
-            wma_rsi_9_21 REAL,
+            rsi_3 DOUBLE PRECISION,
+            rsi_9 DOUBLE PRECISION,
+            ema_rsi_9_3 DOUBLE PRECISION,
+            wma_rsi_9_21 DOUBLE PRECISION,
 
             PRIMARY KEY (
                 asset_type,
@@ -87,13 +87,15 @@ def create_scanner_tables(cur):
                 symbol_id,
                 signal_date
             )
+
         );
-        """)
+    """)
 
-        log("📦 Created scanner_signals table")
+    # -----------------------------------------------------
+    # SCANNER QUERY INDEX
+    # -----------------------------------------------------
 
-        # 🔥 Fast scanner queries
-        cur.execute("""
+    cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_ss_scan
         ON scanner_signals (
             asset_type,
@@ -101,23 +103,54 @@ def create_scanner_tables(cur):
             scanner_freq,
             signal_date DESC
         );
-        """)
+    """)
 
-        log("⚡ Created idx_ss_scan")
+    # -----------------------------------------------------
+    # SYMBOL HISTORY INDEX
+    # -----------------------------------------------------
 
-        # 🔥 Fast symbol history lookups
-        cur.execute("""
+    cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_ss_symbol
         ON scanner_signals (
             symbol_id,
             signal_date DESC
         );
-        """)
+    """)
 
-        log("⚡ Created idx_ss_symbol")
 
-        log("✅ create_scanner_tables completed successfully")
+# =========================================================
+# CREATE ALL SCANNER TABLES
+# =========================================================
+
+def create_scanner_tables(cur):
+
+    try:
+
+        log("========== SCANNER TABLE SETUP START ==========")
+
+        # -------------------------------------------------
+        # WEEKLY SCANNER
+        # -------------------------------------------------
+
+        log("📦 Creating scanner_signals_weekly")
+
+        create_weekly_scanner_table(cur)
+
+        log("✅ Weekly scanner table ready")
+
+        # -------------------------------------------------
+        # UNIFIED SCANNER
+        # -------------------------------------------------
+
+        log("📦 Creating scanner_signals")
+
+        create_unified_scanner_table(cur)
+
+        log("✅ Unified scanner table ready")
+
+        log("🚀 All scanner tables created successfully")
 
     except Exception as e:
-        log(f"🔥 ERROR in create_scanner_tables: {e}")
+
+        log(f"🔥 ERROR creating scanner tables: {e}")
         raise

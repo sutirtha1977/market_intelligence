@@ -1,0 +1,168 @@
+import yfinance as yf
+import pandas as pd
+from typing import List, Tuple
+from tqdm import tqdm
+import traceback
+
+from config.logger import log
+from config.constants import FREQUENCIES
+from config.db_table import ASSET_TABLE_CONFIG
+from database.connection import get_db_connection_cm
+
+# --------------------------------------------------------------------------
+def _fetch_symbols_from_db(cur, symbol_table: str, symbols: str) -> List[Tuple[int, str]]:
+    log(f"▶ FETCH SYMBOLS START | table={symbol_table} | symbols={symbols}")
+    try:
+        query = f"""
+        SELECT symbol_id, symbol
+        FROM {symbol_table}
+        WHERE is_active = TRUE
+        """
+        params = []
+        if symbols != "ALL":
+            symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+            placeholders = ",".join(["%s"] * len(symbol_list))
+            query += f" AND symbol IN ({placeholders})"
+            params.extend(symbol_list)
+        query += " ORDER BY symbol_id"
+        cur.execute(query, params)
+        rows = cur.fetchall()
+        log(f"✅ FETCH SYMBOLS END | loaded={len(rows)}")
+        return rows
+    except Exception:
+        log(f"❌ FETCH SYMBOLS FAILED\n{traceback.format_exc()}")
+        raise
+# --------------------------------------------------------------------------
+def _download_symbol_data(symbol: str, asset_type: str, timeframe: str, start_date: str) -> Tuple[pd.DataFrame, str, str]:
+    symbol_clean = symbol.strip().upper()
+    original_symbol = symbol_clean
+    download_symbol = f"{symbol_clean}.NS" if "india_equity" in asset_type and not symbol_clean.endswith(".NS") else symbol_clean
+    try:
+        # end_date = pd.Timestamp.today()
+        end_date = (pd.Timestamp.today() + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+        df = yf.download(
+            download_symbol,
+            start=start_date,
+            end=end_date,
+            interval=timeframe,
+            auto_adjust=False,
+            progress=False,
+        )
+        if df is None or df.empty:
+            return pd.DataFrame(), download_symbol, original_symbol
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.droplevel(1)
+        df = df.reset_index()
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df = df[df["Date"].notna()]
+        df = df.sort_values("Date")
+        df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
+        price_cols = ["Open", "High", "Low", "Close", "Adj Close"]
+        for col in price_cols:
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("float32")
+        df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce").fillna(0).astype("int64")
+        df["price_final"] = df["Adj Close"]
+        df.loc[df["price_final"].isna() | (df["price_final"] <= 0), "price_final"] = df["Close"]
+        df["pct_price_change"] = (
+            df["price_final"]
+            .pct_change(fill_method=None)
+            .replace([float("inf"), float("-inf")], 0.0)
+            .fillna(0.0)
+            .mul(100)
+            .round(2)
+            .astype("float32")
+        )
+        return df, download_symbol, original_symbol
+    except Exception:
+        log(f"❌ DOWNLOAD FAILED | {symbol_clean} | {timeframe}\n{traceback.format_exc()}")
+        return pd.DataFrame(), download_symbol, original_symbol
+# --------------------------------------------------------------------------
+def _build_rows(symbol_id: int, timeframe: str, df: pd.DataFrame):
+    try:
+        return [
+            (
+                symbol_id,
+                timeframe,
+                r["Date"],
+                r["Open"],
+                r["High"],
+                r["Low"],
+                r["Close"],
+                r["Adj Close"],
+                r["Volume"],
+                r["pct_price_change"],
+            )
+            for _, r in df.iterrows()
+        ]
+    except Exception:
+        log(f"❌ BUILD ROWS FAILED | symbol_id={symbol_id} | tf={timeframe}\n{traceback.format_exc()}")
+        raise
+# --------------------------------------------------------------------------
+def _upsert_rows(conn, price_table: str, rows: list, silent: bool = False):
+    if not rows:
+        return
+    if not silent:
+        log(f"▶ UPSERT START | table={price_table} | rows={len(rows)}")
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(
+                f"""
+                INSERT INTO {price_table} (
+                    symbol_id, timeframe, date,
+                    open, high, low, close, adj_close,
+                    volume, pct_price_change
+                )
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (symbol_id, timeframe, date)
+                DO UPDATE SET
+                    open=EXCLUDED.open,
+                    high=EXCLUDED.high,
+                    low=EXCLUDED.low,
+                    close=EXCLUDED.close,
+                    adj_close=EXCLUDED.adj_close,
+                    volume=EXCLUDED.volume,
+                    pct_price_change=EXCLUDED.pct_price_change
+                """,
+                rows,
+            )
+        if not silent:
+            log("✅ UPSERT END")
+    except Exception:
+        log(f"❌ UPSERT FAILED | table={price_table}\n{traceback.format_exc()}")
+        raise
+# --------------------------------------------------------------------------
+def insert_yahoo_price_data(
+    asset_type: str,
+    symbols: str = "ALL",
+    start_date: str = "1999-01-01"
+) -> List[str]:
+    log(f"✅ PIPELINE START | asset_type={asset_type} | symbols={symbols}")
+    failed_symbols: List[str] = []
+    tables = ASSET_TABLE_CONFIG[asset_type]
+    symbol_table = tables["symbol"]
+    price_table = tables["price"]
+
+    try:
+        with get_db_connection_cm() as conn:
+            with conn.cursor() as cur:
+                symbol_rows = _fetch_symbols_from_db(cur, symbol_table, symbols)
+            for tf in FREQUENCIES:
+                log(f"▶ TIMEFRAME START | {tf}")
+                for symbol_id, symbol in tqdm(symbol_rows, desc=tf, ncols=100):
+                    try:
+                        df, download_symbol, original_symbol = _download_symbol_data(symbol, asset_type, tf, start_date)
+                        if df is None or df.empty:
+                            failed_symbols.append(original_symbol)
+                            continue
+                        _upsert_rows(conn, price_table, _build_rows(symbol_id, tf, df), silent=True)
+                    except Exception:
+                        failed_symbols.append(original_symbol)
+                        log(f"❌ SYMBOL FAILED | {symbol} | {tf}\n{traceback.format_exc()}")
+                conn.commit()
+                log(f"✅ TIMEFRAME END | {tf}")
+    except Exception:
+        log(f"❌ PIPELINE FAILED\n{traceback.format_exc()}")
+    failed_symbols = sorted(set(failed_symbols))
+    log(f"✅ PIPELINE END | failed={len(failed_symbols)}")
+    return failed_symbols
+# --------------------------------------------------------------------------

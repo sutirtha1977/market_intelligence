@@ -1,60 +1,72 @@
+
 # database/equity/vix.py
 
 from config.logger import log
+
+
+# =========================================================
+# CREATE NSE VIX FEATURES TABLE
+# =========================================================
 
 def create_vix_table(cur):
 
     try:
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS nse_vix_features (
-            date DATE NOT NULL,
-            vix REAL NOT NULL,
-            vix_ma_5 REAL,
-            vix_ma_10 REAL,
-            vix_change REAL,
-            vix_percentile REAL,
-            vix_regime TEXT,
-            vix_signal TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT nse_vix_features_pkey PRIMARY KEY (date)
-        );
-        """)
+        log("========== NSE VIX TABLE SETUP START ==========")
 
-        log("📦 Created nse_vix_features table")
-
-        # 🔥 PRODUCTION INDEXES
-        cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_vix_date_desc
-        ON nse_vix_features(date DESC);
-        """)
-
-        log("⚡ Created idx_vix_date_desc")
+        # -------------------------------------------------
+        # CREATE TABLE
+        # -------------------------------------------------
 
         cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_vix_regime
-        ON nse_vix_features(vix_regime);
+            CREATE TABLE IF NOT EXISTS nse_vix_features (
+
+                date DATE PRIMARY KEY,
+
+                vix DOUBLE PRECISION NOT NULL,
+
+                vix_ma_5 DOUBLE PRECISION,
+                vix_ma_10 DOUBLE PRECISION,
+
+                vix_change DOUBLE PRECISION,
+                vix_percentile DOUBLE PRECISION,
+
+                vix_regime TEXT,
+                vix_signal TEXT,
+
+                created_at TIMESTAMPTZ NOT NULL
+                    DEFAULT CURRENT_TIMESTAMP
+
+            );
         """)
 
-        log("⚡ Created idx_vix_regime")
+        log("📦 nse_vix_features table ready")
+
+        # -------------------------------------------------
+        # REGIME INDEX
+        # -------------------------------------------------
 
         cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_vix_signal
-        ON nse_vix_features(vix_signal);
+            CREATE INDEX IF NOT EXISTS idx_vix_regime
+            ON nse_vix_features(vix_regime);
         """)
 
-        log("⚡ Created idx_vix_signal")
+        log("⚡ VIX regime index ready")
 
-        # Optional but useful for range scans (huge tables)
+        # -------------------------------------------------
+        # SIGNAL INDEX
+        # -------------------------------------------------
+
         cur.execute("""
-        CREATE INDEX IF NOT EXISTS idx_vix_date_brin
-        ON nse_vix_features USING BRIN(date);
+            CREATE INDEX IF NOT EXISTS idx_vix_signal
+            ON nse_vix_features(vix_signal);
         """)
 
-        log("⚡ Created idx_vix_date_brin")
+        log("⚡ VIX signal index ready")
 
-        log("✅ VIX table created successfully")
+        log("🚀 NSE VIX table setup completed successfully")
 
     except Exception as e:
-        log(f"🔥 ERROR in create_vix_table: {e}")
+
+        log(f"🔥 ERROR creating NSE VIX table: {e}")
         raise
