@@ -1,1 +1,3 @@
 .venv/
+/logs/
+/audit_trail.log
