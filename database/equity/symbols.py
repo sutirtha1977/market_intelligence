@@ -40,6 +40,7 @@ def create_symbol_table(cur, table):
                 name TEXT,
                 symbol TEXT,
                 exchange TEXT,
+                series TEXT,
                 is_active BOOLEAN DEFAULT TRUE,
                 is_future BOOLEAN DEFAULT FALSE,
 

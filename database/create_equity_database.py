@@ -14,7 +14,7 @@ from database.equity.symbols import create_symbol_tables
 from database.equity.price import create_price_tables
 from database.equity.indicators import create_indicator_tables
 from database.equity.nse_tables import create_index_tables
-from database.equity.scanner import create_scanner_tables
+# from database.equity.scanner import create_scanner_tables
 from database.equity.vix import create_vix_table
 
 # Enable these imports when their setup functions are ready.
@@ -98,9 +98,9 @@ def create_equity_database(drop_existing=False):
         # SCANNER TABLES
         # -------------------------------------------------
 
-        log("========== CREATING SCANNER TABLES ==========")
+        # log("========== CREATING SCANNER TABLES ==========")
 
-        create_scanner_tables(cur)
+        # create_scanner_tables(cur)
 
         # -------------------------------------------------
         # OPTIONAL TABLES

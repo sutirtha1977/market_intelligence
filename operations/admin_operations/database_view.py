@@ -1,15 +1,12 @@
 # operations/admin_operations/database_view.py
 
 import streamlit as st
-from streamlit_option_menu import option_menu
-from config.logger import log
-from core.ui_helpers import action_button, render_html_table, show_message
-from core.widgets import get_horizontal_internal_tab_styles
-from config.db_config import ASSET_CHOICE_MAP
+from config.logger import log, clear_log
+from core.ui_helpers import action_button, show_message
 from database.create_equity_database import create_equity_database
 # from database.create_fno_database import create_fno_database
-# from services.equity.symbol_service import refresh_symbols
-# from services.equity.utility_service import upsert_nse_holidays
+from services.equity.symbol_service import refresh_symbols
+from services.equity.utility_service import upsert_nse_holidays
 
 # --------------------------------------------------------------------------
 st.session_state.setdefault("db_message", None)
@@ -43,14 +40,13 @@ st.session_state.setdefault("db_dates_df", None)
 #         run_operation("Creating database...", task)
 #     )
 def operation_create_database():
-
     drop_existing = st.checkbox(
         "Drop existing tables (❌ DANGEROUS)",
         key="db_drop_existing"
     )
-
     def task():
         try:
+            clear_log()
             log(f"Creating Equity database, drop={drop_existing}")
 
             create_equity_database(drop_existing)
@@ -60,40 +56,27 @@ def operation_create_database():
             )
 
         except Exception as e:
-
             log(f"Database creation failed: {e}", level="error")
-
             st.session_state.db_message = f"ERROR {e}"
             raise
-
     action_button(
         "Create Equity Database",
         task
     )
-
-    show_message("db_message")
     
 # --------------------------------------------------------------------------
 def operation_refresh_symbols():
-    confirm = st.radio(
-        label="Confirm Symbol Refresh ?",
-        options=["Yes", "No"],
-        captions=[
-        "Proceed with refreshing all symbols in the database.",
-        "Cancel the symbol refresh operation."],
-        key="db_refresh_confirm",
-        horizontal=True,
-        label_visibility="visible"
-    ).upper()
     def task():
         try:
-            if confirm == "YES":
-                # refresh_symbols()
-                st.session_state.db_message = "All symbols refreshed successfully"
-            else:
-                st.session_state.db_message = "Operation Cancelled"
+            clear_log()
+            log("Starting full symbol refresh")
+            refresh_symbols()
+            st.session_state.db_message = "Symbol refresh completed successfully"
         except Exception as e:
+            log(f"Symbol refresh failed: {e}", level="error")
             st.session_state.db_message = f"ERROR {e}"
+            raise
+
     action_button(
         "Refresh Symbols",
         task
@@ -103,7 +86,8 @@ def operation_refresh_symbols():
 def operation_update_calendar():
     def task():
         try:
-            # upsert_nse_holidays()
+            clear_log()
+            upsert_nse_holidays()
             st.session_state.db_message = "Exchange holidays updated successfully"
         except Exception as e:
             st.session_state.db_message = f"ERROR {e}"
@@ -114,32 +98,26 @@ def operation_update_calendar():
     
 # --------------------------------------------------------------------------
 def handle_database_operations():
-    show_message("db_message")
+    st.subheader("Database operations")
+    st.caption("Choose an operation below. Each action runs when you click its button.")
 
-    operations = [
-        "INITIALIZE DATABASE",
-        "REFRESH SYMBOLS",
-        "UPDATE NSE CALENDAR"
-    ]
+    message_placeholder = st.empty()
 
-    operations_map = {
-        "INITIALIZE DATABASE": operation_create_database,
-        "REFRESH SYMBOLS": operation_refresh_symbols,
-        "UPDATE NSE CALENDAR": operation_update_calendar
-    }
+    with st.container(border=True):
+        st.subheader("Initialize equity database")
+        st.caption("Create the required equity database tables and indexes.")
+        operation_create_database()
 
-    choice = option_menu(
-        menu_title=None,
-        options=operations,
-        icons=["server", "arrow-repeat", "calendar-check", "calendar"],
-        menu_icon="",
-        default_index=0,
-        orientation="horizontal",
-        styles=get_horizontal_internal_tab_styles()
-    )
+    with st.container(border=True):
+        st.subheader("Refresh symbols")
+        st.caption("Refresh the market symbols used by the application.")
+        operation_refresh_symbols()
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.container(border=True):
+        st.subheader("Update NSE calendar")
+        st.caption("Synchronize the NSE exchange holiday calendar.")
+        operation_update_calendar()
 
-    if choice in operations_map:
-        operations_map[choice]()
+    with message_placeholder.container():
+        show_message("db_message")
 # --------------------------------------------------------------------------
