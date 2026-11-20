@@ -1,10 +1,11 @@
 import traceback
 import warnings
-from typing import Optional, List
+from typing import Callable, List, Optional
 
 import pandas as pd
 import talib
 import numpy as np
+from psycopg2.extras import execute_values
 from tqdm import tqdm
 
 from database.connection import (
@@ -19,6 +20,7 @@ from config.logger import log
 
 # --------------------------------------------------------------------------
 warnings.simplefilter(action="ignore", category=UserWarning)
+SYMBOL_BATCH_SIZE = 50
 # --------------------------------------------------------------------------
 def calculate_indicators(
     df: pd.DataFrame,
@@ -40,7 +42,9 @@ def calculate_indicators(
         context="Calculate indicators",
     )
 
-    df = df.sort_values("date").reset_index(drop=True)
+    if not df["date"].is_monotonic_increasing:
+        df = df.sort_values("date")
+    df = df.reset_index(drop=True)
 
     price = np.where(
         df["adj_close"] > 0,
@@ -113,163 +117,133 @@ def calculate_indicators(
 
 # --------------------------------------------------------------------------
 def refresh_indicators(
-    asset_types: Optional[List[str]] = None
+    asset_types: Optional[List[str]] = None,
+    progress_callback: Optional[Callable[[str, int, int], None]] = None,
 ) -> None:
 
     try:
         log("🛠 refresh_indicators started")
 
-        asset_keys = asset_types or ASSET_TABLE_CONFIG.keys()
-
-        # ------------------------------------------------------------------
-        # READ ENGINE
-        # ------------------------------------------------------------------
+        asset_keys = asset_types or [
+            key
+            for key, tables in ASSET_TABLE_CONFIG.items()
+            if all(column in tables for column in ("symbol", "price", "indicator"))
+        ]
         engine = get_engine()
 
-        # ------------------------------------------------------------------
-        # WRITE CONNECTION
-        # ------------------------------------------------------------------
         with get_db_connection_cm() as write_conn:
-
             for asset_key in asset_keys:
-
                 tables = ASSET_TABLE_CONFIG[asset_key]
-
                 symbol_table = tables["symbol"]
                 price_table = tables["price"]
                 indicator_table = tables["indicator"]
-
-                col_id = "symbol_id"
-
-                # ----------------------------------------------------------
-                # TRUNCATE TABLE FIRST
-                # ----------------------------------------------------------
-                log(
-                    f"🗑 TRUNCATING {indicator_table}"
-                )
-
+                log(f"🗑 TRUNCATING {indicator_table}")
                 with write_conn.cursor() as cur:
+                    cur.execute(f"TRUNCATE TABLE {indicator_table}")
 
-                    cur.execute(
-                        f"TRUNCATE TABLE {indicator_table}"
-                    )
-
-                write_conn.commit()
-
-                log(
-                    f"✅ TRUNCATED {indicator_table}"
-                )
-
-                # ----------------------------------------------------------
                 asset_ids = pd.read_sql(
                     f"""
-                    SELECT {col_id}
+                    SELECT symbol_id
                     FROM {symbol_table}
                     """,
                     engine
-                )[col_id].tolist()
+                )["symbol_id"].tolist()
+                total_assets = len(asset_ids)
+                insert_sql = None
 
                 for timeframe in FREQUENCIES:
+                    log(f"✅ UPDATING {indicator_table} | TIMEFRAME={timeframe}")
+                    if progress_callback:
+                        progress_callback(timeframe, 0, total_assets)
 
-                    log(
-                        f"✅ UPDATING {indicator_table} "
-                        f"| TIMEFRAME={timeframe}"
+                    terminal_progress = (
+                        None
+                        if progress_callback
+                        else tqdm(total=total_assets, ncols=100, desc=timeframe)
                     )
-
-                    for asset_id in tqdm(
-                        asset_ids,
-                        ncols=100,
-                        desc=timeframe
-                    ):
-
-                        df = pd.read_sql(
-                            f"""
-                            SELECT
-                                date,
-                                open,
-                                high,
-                                low,
-                                close,
-                                adj_close,
-                                volume
-                            FROM {price_table}
-                            WHERE {col_id}=%s
-                              AND timeframe=%s
-                            ORDER BY date
-                            """,
-                            engine,
-                            params=(
-                                asset_id,
-                                timeframe
+                    completed_assets = 0
+                    try:
+                        for start in range(0, total_assets, SYMBOL_BATCH_SIZE):
+                            asset_batch = asset_ids[start:start + SYMBOL_BATCH_SIZE]
+                            placeholders = ",".join(["%s"] * len(asset_batch))
+                            price_rows = pd.read_sql(
+                                f"""
+                                SELECT
+                                    symbol_id,
+                                    date,
+                                    open,
+                                    high,
+                                    low,
+                                    close,
+                                    adj_close,
+                                    volume
+                                FROM {price_table}
+                                WHERE symbol_id IN ({placeholders})
+                                  AND timeframe=%s
+                                ORDER BY symbol_id, date
+                                """,
+                                engine,
+                                params=(*asset_batch, timeframe),
                             )
-                        )
+                            asset_data = {
+                                symbol_id: rows.drop(columns="symbol_id")
+                                for symbol_id, rows in price_rows.groupby(
+                                    "symbol_id",
+                                    sort=False
+                                )
+                            }
 
-                        if df.empty:
-                            continue
+                            for asset_id in asset_batch:
+                                symbol_data = asset_data.get(asset_id)
+                                if symbol_data is not None and not symbol_data.empty:
+                                    indicators = calculate_indicators(symbol_data)
+                                    if not indicators.empty:
+                                        if insert_sql is None:
+                                            columns = [
+                                                "symbol_id",
+                                                "timeframe",
+                                                *indicators.columns,
+                                            ]
+                                            insert_sql = f"""
+                                                INSERT INTO {indicator_table}
+                                                ({",".join(columns)})
+                                                VALUES %s
+                                            """
 
-                        ind = calculate_indicators(df)
+                                        rows = [
+                                            (asset_id, timeframe, *values)
+                                            for values in indicators.itertuples(
+                                                index=False,
+                                                name=None
+                                            )
+                                        ]
+                                        with write_conn.cursor() as cur:
+                                            execute_values(
+                                                cur,
+                                                insert_sql,
+                                                rows,
+                                                page_size=1000,
+                                            )
 
-                        if ind.empty:
-                            continue
-
-                        ind.insert(
-                            0,
-                            col_id,
-                            asset_id
-                        )
-
-                        ind.insert(
-                            1,
-                            "timeframe",
-                            timeframe
-                        )
-
-                        columns = list(ind.columns)
-
-                        column_sql = ",".join(columns)
-
-                        placeholders = ",".join(
-                            ["%s"] * len(columns)
-                        )
-
-                        # --------------------------------------------------
-                        # INSERT ONLY
-                        # --------------------------------------------------
-                        insert_sql = f"""
-                        INSERT INTO {indicator_table}
-                        ({column_sql})
-                        VALUES ({placeholders})
-                        """
-
-                        rows = list(
-                            ind.itertuples(
-                                index=False,
-                                name=None
-                            )
-                        )
-
-                        with write_conn.cursor() as cur:
-
-                            cur.executemany(
-                                insert_sql,
-                                rows
-                            )
+                                completed_assets += 1
+                                if terminal_progress is not None:
+                                    terminal_progress.update(1)
+                                if progress_callback:
+                                    progress_callback(
+                                        timeframe,
+                                        completed_assets,
+                                        total_assets,
+                                    )
+                    finally:
+                        if terminal_progress is not None:
+                            terminal_progress.close()
 
                 write_conn.commit()
+                log(f"✅ COMPLETED {indicator_table}")
 
-                log(
-                    f"✅ COMPLETED {indicator_table}"
-                )
+        log("✅ INDICATORS REBUILT SUCCESSFULLY")
 
-        log(
-            "✅ INDICATORS REBUILT SUCCESSFULLY"
-        )
-
-    except Exception as e:
-
-        log(
-            f"❌ REFRESH_INDICATORS FAILED | {e}"
-        )
-
-        traceback.print_exc()
+    except Exception:
+        log(f"❌ REFRESH_INDICATORS FAILED\n{traceback.format_exc()}")
+        raise
 # --------------------------------------------------------------------------

@@ -19,10 +19,6 @@ def load_nse():
     from operations.admin_operations.nse_view import handle_nse_operations
     handle_nse_operations()
 
-def load_derivatives():
-    from operations.admin_operations.derivative_view import handle_derivative_operations
-    handle_derivative_operations()
-
 def load_scanners():
     from operations.admin_operations.scanners_view import handle_scanners_operations
     handle_scanners_operations()
@@ -52,11 +48,10 @@ def handle_admin_operations():
     # Tabs
     tab_choice = option_menu(
         menu_title=None,
-        options=["YAHOO", "NSE", "DERIVATIVES", "SCANNERS", "DATABASE"],
+        options=["YAHOO", "NSE", "SCANNERS", "DATABASE"],
         icons=[
             "envelope-fill",
             "bar-chart-line-fill",
-            "lightning-fill",
             "search-heart",
             "database-fill"
         ],
@@ -75,10 +70,6 @@ def handle_admin_operations():
     elif tab_choice == "NSE":
         # load_nse()
         st.info("NSE module is under development.")
-
-    elif tab_choice == "DERIVATIVES":
-        # load_derivatives()
-        st.info("Derivatives module is under development.")
 
     elif tab_choice == "SCANNERS":
         # load_scanners()

@@ -66,16 +66,28 @@ def operation_price_data(progress_placeholder):
         task
     ) 
 # --------------------------------------------------------------------------
-def operation_indicators():
+def operation_indicators(progress_placeholder):
     asset_label, asset_type = get_asset_choice("yahoo_indicator_asset")
     def task():
-        clear_log()
         try:
             log(f"Refreshing indicators for {asset_type}")
-            refresh_indicators(asset_types=[asset_type])
+
+            progress_placeholder.progress(0.0, text="Preparing indicator refresh...")
+
+            def update_progress(timeframe: str, completed: int, total: int) -> None:
+                progress = completed / total if total else 1.0
+                progress_placeholder.progress(
+                    progress,
+                    text=f"Timeframe {timeframe}: {completed}/{total} symbols"
+                )
+
+            refresh_indicators(
+                asset_types=[asset_type],
+                progress_callback=update_progress,
+            )
             st.session_state.yahoo_message = f"{asset_label} Indicators update successful."
         except Exception as e:
-            st.session_state.yahoo_message = f"Error: {e}"
+            st.session_state.yahoo_message = f"ERROR: {e}"
     action_button(
         "Refresh Indicators",
         task
@@ -118,7 +130,7 @@ def handle_yahoo_operations():
 
     operations_map = {
         "PRICE DATA": lambda: operation_price_data(progress_placeholder),
-        "INDICATORS": operation_indicators,
+        "INDICATORS": lambda: operation_indicators(progress_placeholder),
         "VCP": operation_vcp
     }
 
