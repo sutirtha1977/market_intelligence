@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 from database.connection import get_db_connection_cm
 from config.logger import log
-from config.db_table import FNO_TABLE_MAP
+from config.db_config import FNO_TABLE_MAP
 
 warnings.simplefilter(action="ignore", category=UserWarning)
 

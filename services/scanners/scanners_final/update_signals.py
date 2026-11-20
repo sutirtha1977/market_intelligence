@@ -2,7 +2,7 @@ import pandas as pd
 import traceback
 
 from database.connection import get_db_connection_cm
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from config.logger import log
 
 # --------------------------------------------------------------------------

@@ -51,7 +51,7 @@ def validate_asset_type(
     # 🔑 SINGLE SOURCE OF TRUTH
     if valid_types is None:
         try:
-            from config.db_table import ASSET_TABLE_CONFIG
+            from config.db_config import ASSET_TABLE_CONFIG
             valid_types = set(ASSET_TABLE_CONFIG.keys())
         except Exception as e:
             raise RuntimeError(

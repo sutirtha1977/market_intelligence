@@ -13,7 +13,7 @@ from database.connection import (
 )
 
 from config.constants import FREQUENCIES
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from services.equity.validation_service import validate_dataframe_columns
 from config.logger import log
 

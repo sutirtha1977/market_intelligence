@@ -4,7 +4,7 @@ from typing import Dict, Optional, List, Union
 from config.logger import log
 from datetime import datetime, timedelta, date
 from database.connection import get_db_connection_cm, get_engine
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 import pandas as pd
 
 # --------------------------------------------------------------------------

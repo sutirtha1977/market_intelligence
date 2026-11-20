@@ -70,8 +70,7 @@ def handle_admin_operations():
     # FAST ROUTER (NO SPINNER)
     # ----------------------------------------------------------
     if tab_choice == "YAHOO":
-        # load_yahoo()
-        st.info("Yahoo module is under development.")
+        load_yahoo()
 
     elif tab_choice == "NSE":
         # load_nse()

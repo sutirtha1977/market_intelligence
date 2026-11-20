@@ -6,7 +6,7 @@ import traceback
 
 from config.logger import log
 from config.constants import FREQUENCIES
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from database.connection import get_db_connection_cm
 
 # --------------------------------------------------------------------------
