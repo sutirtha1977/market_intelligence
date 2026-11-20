@@ -57,10 +57,6 @@ def run_operation(
     ensure_busy()
 
     def runner():
-
-        if st.session_state.busy:
-            return
-
         st.session_state.busy = True
 
         try:
@@ -196,9 +192,42 @@ def action_button(
     if st.session_state.busy:
         return None
 
+    overlay = st.empty()
     st.session_state.busy = True
 
     try:
+        with overlay:
+            st.html(
+                f"""
+                <style>
+                .market-operation-blocker {{
+                    position: fixed;
+                    inset: 0;
+                    z-index: 2147483647;
+                    background: rgba(15, 23, 42, 0.12);
+                    cursor: wait;
+                }}
+                .market-operation-status {{
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    z-index: 2147483647;
+                    padding: 14px 20px;
+                    border-radius: 10px;
+                    background: #ffffff;
+                    color: #1f2937;
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+                    font-weight: 600;
+                    pointer-events: none;
+                }}
+                </style>
+                <div class="market-operation-blocker" aria-hidden="true"></div>
+                <div class="market-operation-status" role="status" aria-live="polite">
+                    Operation in progress: {escape(label)}
+                </div>
+                """
+            )
 
         if clear_logs_before:
             clear_log()
@@ -216,6 +245,7 @@ def action_button(
             st.code(traceback.format_exc())
 
     finally:
+        overlay.empty()
         st.session_state.busy = False
 
     return None

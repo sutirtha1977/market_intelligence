@@ -1,8 +1,9 @@
 import yfinance as yf
 import pandas as pd
-from typing import List, Tuple
-from tqdm import tqdm
+from typing import Callable, List, Optional, Tuple
 import traceback
+
+from psycopg2.extras import execute_values
 
 from config.logger import log
 from config.constants import FREQUENCIES
@@ -19,11 +20,14 @@ def _fetch_symbols_from_db(cur, symbol_table: str, symbols: str) -> List[Tuple[i
         WHERE is_active = TRUE
         """
         params = []
-        if symbols != "ALL":
-            symbol_list = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        requested_symbols = symbols.strip().upper() if symbols else "ALL"
+        if requested_symbols != "ALL":
+            symbol_list = [s.strip().upper() for s in requested_symbols.split(",") if s.strip()]
             placeholders = ",".join(["%s"] * len(symbol_list))
             query += f" AND symbol IN ({placeholders})"
             params.extend(symbol_list)
+        if requested_symbols != "ALL" and not params:
+            return []
         query += " ORDER BY symbol_id"
         cur.execute(query, params)
         rows = cur.fetchall()
@@ -59,7 +63,7 @@ def _download_symbol_data(symbol: str, asset_type: str, timeframe: str, start_da
         df["Date"] = df["Date"].dt.strftime("%Y-%m-%d")
         price_cols = ["Open", "High", "Low", "Close", "Adj Close"]
         for col in price_cols:
-            df[col] = pd.to_numeric(df[col], errors="coerce").astype("float32")
+            df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
         df["Volume"] = pd.to_numeric(df["Volume"], errors="coerce").fillna(0).astype("int64")
         df["price_final"] = df["Adj Close"]
         df.loc[df["price_final"].isna() | (df["price_final"] <= 0), "price_final"] = df["Close"]
@@ -70,7 +74,6 @@ def _download_symbol_data(symbol: str, asset_type: str, timeframe: str, start_da
             .fillna(0.0)
             .mul(100)
             .round(2)
-            .astype("float32")
         )
         return df, download_symbol, original_symbol
     except Exception:
@@ -79,20 +82,12 @@ def _download_symbol_data(symbol: str, asset_type: str, timeframe: str, start_da
 # --------------------------------------------------------------------------
 def _build_rows(symbol_id: int, timeframe: str, df: pd.DataFrame):
     try:
+        values = df[
+            ["Date", "Open", "High", "Low", "Close", "Adj Close", "Volume", "pct_price_change"]
+        ].itertuples(index=False, name=None)
         return [
-            (
-                symbol_id,
-                timeframe,
-                r["Date"],
-                r["Open"],
-                r["High"],
-                r["Low"],
-                r["Close"],
-                r["Adj Close"],
-                r["Volume"],
-                r["pct_price_change"],
-            )
-            for _, r in df.iterrows()
+            (symbol_id, timeframe, *row)
+            for row in values
         ]
     except Exception:
         log(f"❌ BUILD ROWS FAILED | symbol_id={symbol_id} | tf={timeframe}\n{traceback.format_exc()}")
@@ -105,14 +100,15 @@ def _upsert_rows(conn, price_table: str, rows: list, silent: bool = False):
         log(f"▶ UPSERT START | table={price_table} | rows={len(rows)}")
     try:
         with conn.cursor() as cur:
-            cur.executemany(
+            execute_values(
+                cur,
                 f"""
                 INSERT INTO {price_table} (
                     symbol_id, timeframe, date,
                     open, high, low, close, adj_close,
                     volume, pct_price_change
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES %s
                 ON CONFLICT (symbol_id, timeframe, date)
                 DO UPDATE SET
                     open=EXCLUDED.open,
@@ -124,6 +120,7 @@ def _upsert_rows(conn, price_table: str, rows: list, silent: bool = False):
                     pct_price_change=EXCLUDED.pct_price_change
                 """,
                 rows,
+                page_size=1000,
             )
         if not silent:
             log("✅ UPSERT END")
@@ -134,7 +131,8 @@ def _upsert_rows(conn, price_table: str, rows: list, silent: bool = False):
 def insert_yahoo_price_data(
     asset_type: str,
     symbols: str = "ALL",
-    start_date: str = "1999-01-01"
+    start_date: str = "1999-01-01",
+    progress_callback: Optional[Callable[[str, int, int], None]] = None,
 ) -> List[str]:
     log(f"✅ PIPELINE START | asset_type={asset_type} | symbols={symbols}")
     failed_symbols: List[str] = []
@@ -148,16 +146,24 @@ def insert_yahoo_price_data(
                 symbol_rows = _fetch_symbols_from_db(cur, symbol_table, symbols)
             for tf in FREQUENCIES:
                 log(f"▶ TIMEFRAME START | {tf}")
-                for symbol_id, symbol in tqdm(symbol_rows, desc=tf, ncols=100):
+                timeframe_rows = []
+                total_symbols = len(symbol_rows)
+                if progress_callback:
+                    progress_callback(tf, 0, total_symbols)
+                for completed, (symbol_id, symbol) in enumerate(symbol_rows, start=1):
+                    original_symbol = symbol
                     try:
                         df, download_symbol, original_symbol = _download_symbol_data(symbol, asset_type, tf, start_date)
                         if df is None or df.empty:
                             failed_symbols.append(original_symbol)
-                            continue
-                        _upsert_rows(conn, price_table, _build_rows(symbol_id, tf, df), silent=True)
+                        else:
+                            timeframe_rows.extend(_build_rows(symbol_id, tf, df))
                     except Exception:
                         failed_symbols.append(original_symbol)
                         log(f"❌ SYMBOL FAILED | {symbol} | {tf}\n{traceback.format_exc()}")
+                    if progress_callback:
+                        progress_callback(tf, completed, total_symbols)
+                _upsert_rows(conn, price_table, timeframe_rows, silent=True)
                 conn.commit()
                 log(f"✅ TIMEFRAME END | {tf}")
     except Exception:
