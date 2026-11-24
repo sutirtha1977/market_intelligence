@@ -1,5 +1,5 @@
 git add .
-git commit -m "changes done on 20 Nov 2026"
+git commit -m "changes done on 24 Nov 2026"
 git push
 
 ps aux | grep -E "zsh|bash|fish" | grep -v grep | awk '{print $2}' | xargs kill -9

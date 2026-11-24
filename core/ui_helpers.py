@@ -204,27 +204,73 @@ def action_button(
                     position: fixed;
                     inset: 0;
                     z-index: 2147483647;
-                    background: rgba(15, 23, 42, 0.12);
+                    background: rgba(15, 23, 42, 0.32);
+                    backdrop-filter: blur(3px);
                     cursor: wait;
                 }}
-                .market-operation-status {{
+                .market-operation-card {{
                     position: fixed;
                     top: 50%;
                     left: 50%;
                     transform: translate(-50%, -50%);
                     z-index: 2147483647;
-                    padding: 14px 20px;
-                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    width: max-content;
+                    max-width: calc(100vw - 32px);
+                    padding: 22px 26px;
+                    border: 1px solid rgba(148, 163, 184, 0.3);
+                    border-radius: 16px;
                     background: #ffffff;
-                    color: #1f2937;
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-                    font-weight: 600;
+                    color: #0f172a;
+                    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.22);
                     pointer-events: none;
+                }}
+                .market-operation-spinner {{
+                    width: 28px;
+                    height: 28px;
+                    flex: 0 0 28px;
+                    border: 3px solid #dbeafe;
+                    border-top-color: #2563eb;
+                    border-radius: 50%;
+                    animation: market-operation-spin 0.8s linear infinite;
+                }}
+                .market-operation-copy {{
+                    display: grid;
+                    gap: 4px;
+                }}
+                .market-operation-title {{
+                    font-size: 15px;
+                    font-weight: 650;
+                    line-height: 1.3;
+                }}
+                .market-operation-label {{
+                    color: #334155;
+                    font-size: 13px;
+                    font-weight: 600;
+                }}
+                .market-operation-hint {{
+                    color: #64748b;
+                    font-size: 12px;
+                }}
+                @keyframes market-operation-spin {{
+                    to {{ transform: rotate(360deg); }}
+                }}
+                @media (prefers-reduced-motion: reduce) {{
+                    .market-operation-spinner {{ animation: none; }}
                 }}
                 </style>
                 <div class="market-operation-blocker" aria-hidden="true"></div>
-                <div class="market-operation-status" role="status" aria-live="polite">
-                    Operation in progress: {escape(label)}
+                <div class="market-operation-card" role="status" aria-live="polite">
+                    <span class="market-operation-spinner" aria-hidden="true"></span>
+                    <div class="market-operation-copy">
+                        <div class="market-operation-title">Operation in progress</div>
+                        <div class="market-operation-label">{escape(label)}</div>
+                        <div class="market-operation-hint">
+                            Please keep this page open while the task runs.
+                        </div>
+                    </div>
                 </div>
                 """
             )
@@ -232,8 +278,7 @@ def action_button(
         if clear_logs_before:
             clear_log()
 
-        with st.spinner(f"Executing {label}..."):
-            result = callback()
+        result = callback()
 
         return result
 

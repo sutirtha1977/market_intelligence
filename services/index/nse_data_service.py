@@ -14,7 +14,7 @@ from config.constants import (
     NSE_IDX_HEADERS,
     NSE_IDX_CONS_HEADERS,
 )
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from config.paths import NSE_DIR
 from config.logger import log
 from services.equity.cleanup_service import delete_files_in_folder
@@ -26,6 +26,12 @@ FALLBACK_START_DATE = date(2018, 1, 1)
 START_DATE = "01-Jan-2000"
 END_DATE = "31-Dec-2017"
 SMA_PERIOD = 124
+
+
+class NSEHistoricalAPIError(RuntimeError):
+    """Raised when the historical endpoint does not return its expected API response."""
+
+
 # --------------------------------------------------------------------------
 def upsert_nifty_index_constituents():
     log("Starting NSE Index Constituents Update")
@@ -126,14 +132,44 @@ def upsert_nse_index_history():
                         }
                         r = session.post(NSE_IDX_API_URL, headers=NSE_IDX_HEADERS, json=payload, timeout=30)
                         r.raise_for_status()
-                        outer = r.json()
-                        raw = outer.get("d", "")
+                        
+                        # outer = r.json()
+                        # raw = outer.get("d", "")
 
-                        if not raw:
-                            log(f"No data returned for {symbol}, skipping")
+                        # if not raw:
+                        #     log(f"No data returned for {symbol}, skipping")
+                        #     continue
+                        # raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
+                        # records = json.loads(raw_fixed)
+                        outer = r.json()
+
+                        if isinstance(outer, dict):
+                            raw = outer.get("d", "")
+                            if not raw:
+                                log(f"No data returned for {symbol}, skipping")
+                                continue
+
+                            if isinstance(raw, str):
+                                raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
+                                records = json.loads(raw_fixed)
+                            elif isinstance(raw, list):
+                                records = raw
+                            else:
+                                log(f"Unexpected 'd' data type for {symbol}: {type(raw).__name__}")
+                                continue
+
+                        elif isinstance(outer, list):
+                            records = outer
+
+                        else:
+                            log(f"Unexpected API response type for {symbol}: {type(outer).__name__}")
                             continue
-                        raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
-                        records = json.loads(raw_fixed)
+
+                        if not records:
+                            log(f"No records returned for {symbol}, skipping")
+                            continue
+
+                        df = pd.DataFrame(records)
                         df = pd.DataFrame(records)
                         if "HistoricalDate" not in df.columns:
                             log(f"{symbol} missing HistoricalDate column, skipping")
@@ -182,6 +218,7 @@ def upsert_nse_index_history():
     except Exception as e:
         log(f"❌ General error in NSE index history upsert: {e}")
     log("✅ NSE historical index upsert completed (check error logs for issues)")
+
 # --------------------------------------------------------------------------
 def upsert_nse_index_incremental():
     log("Starting NSE Index Price Data Update")

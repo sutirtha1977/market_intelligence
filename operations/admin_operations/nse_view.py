@@ -2,161 +2,131 @@
 
 import streamlit as st
 from streamlit_option_menu import option_menu
+
 from config.logger import log, clear_log
-from core.ui_helpers import action_button,run_operation, show_message
+from core.ui_helpers import action_button, show_message
 from core.widgets import get_vertical_tab_styles
 
-from services.index.nse_data_service import upsert_nifty_index_constituents
-from services.index.nse_data_service import upsert_nse_index_history
-from services.index.nse_data_service import upsert_nse_index_incremental
-from services.index.nse_data_service import update_weekly_monthly_for_all_symbols
-from services.equity.indicator.indicator_engine import refresh_indicators
-from services.index.nse_data_service import update_nse_index_srt
-from services.index.vix_service import update_vix_daily_data
-from services.index.vix_service import compute_vix_features_talib
-from services.equity.indicator.rs_engine import run_rs_engine
-
-# --------------------------------------------------------------------------
 st.session_state.setdefault("nse_message", None)
-# --------------------------------------------------------------------------
+
+
+def run_nse_task(button_label, progress_message, success_message, operation, *args, **kwargs):
+    def task():
+        try:
+            clear_log()
+            log(progress_message)
+            operation(*args, **kwargs)
+            st.session_state.nse_message = success_message
+        except Exception as exc:
+            log(f"ERROR: {exc}", level="error")
+            st.session_state.nse_message = f"ERROR: {exc}"
+
+    action_button(button_label, task)
+
+
 def operation_constituents():
-    def task():
-        clear_log()
-        try:
-            log("Updating index constituents")
-            upsert_nifty_index_constituents()
-            st.session_state.nse_message = "Index constituents synced successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.index.nse_data_service import upsert_nifty_index_constituents
+
+    run_nse_task(
         "Sync Constituents",
-        run_operation("Updating constituents...", task)
+        "Updating index constituents",
+        "Index constituents synced successfully.",
+        upsert_nifty_index_constituents,
     )
-    
-# --------------------------------------------------------------------------
+
+
 def operation_history():
-    def task():
-        clear_log()
-        try:
-            log("Loading historical data")
-            upsert_nse_index_history()
-            st.session_state.nse_message = "Historical data loaded successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.index.nse_data_service import upsert_nse_index_history
+
+    run_nse_task(
         "Load Historical Data",
-        run_operation("Loading historical data...", task)
+        "Loading historical data",
+        "Historical data loaded successfully.",
+        upsert_nse_index_history,
     )
-    
-# --------------------------------------------------------------------------
+
+
 def operation_incremental():
-    def task():
-        clear_log()
-        try:
-            log("Updating incremental data")
-            upsert_nse_index_incremental()
-            st.session_state.nse_message = "Incremental data updated successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.index.nse_data_service import upsert_nse_index_incremental
+
+    run_nse_task(
         "Update Incremental Data",
-        run_operation("Updating incremental data...", task)
+        "Updating incremental data",
+        "Incremental data updated successfully.",
+        upsert_nse_index_incremental,
     )
-    
-# --------------------------------------------------------------------------
+
+
 def operation_weekly_monthly():
-    def task():
-        clear_log()
-        try:
-            log("Updating weekly/monthly data")
-            update_weekly_monthly_for_all_symbols(asset_type="nse_india_index")
-            st.session_state.nse_message = "Weekly & Monthly data updated successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.index.nse_data_service import update_weekly_monthly_for_all_symbols
+
+    run_nse_task(
         "Update Weekly/Monthly",
-        run_operation("Updating weekly/monthly data...", task)
+        "Updating weekly/monthly data",
+        "Weekly & Monthly data updated successfully.",
+        update_weekly_monthly_for_all_symbols,
+        asset_type="nse_india_index",
     )
-    
-# --------------------------------------------------------------------------
+
+
 def operation_indicators():
-    def task():
-        clear_log()
-        try:
-            log("Refreshing indicators")
-            refresh_indicators(asset_types=["nse_india_index"])
-            st.session_state.nse_message = "Index indicators updated successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.equity.indicator.indicator_engine import refresh_indicators
+
+    run_nse_task(
         "Refresh Indicators",
-        run_operation("Refreshing index indicators...", task)
+        "Refreshing indicators",
+        "Index indicators updated successfully.",
+        refresh_indicators,
+        asset_types=["nse_india_index"],
     )
-    
-# --------------------------------------------------------------------------
-def operation_srt(): 
-    def task():
-        clear_log()
-        try:
-            log("Updating Daily SRT for index")
-            update_nse_index_srt()
-            st.session_state.nse_message = "SRT updated successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+
+
+def operation_srt():
+    from services.index.nse_data_service import update_nse_index_srt
+
+    run_nse_task(
         "Update SRT",
-        run_operation("Updating Daily SRT...", task)
+        "Updating Daily SRT for index",
+        "SRT updated successfully.",
+        update_nse_index_srt,
     )
 
-# --------------------------------------------------------------------------
+
 def operation_rs():
-    def task():
-        clear_log()
-        try:
-            log("Updating Daily RS for index")
-            run_rs_engine("nse_india_index")
-            st.session_state.nse_message = "RS updated successfully."
-        except Exception as e:
-            st.session_state.nse_message = f"ERROR {e}"
-    action_button(
+    from services.equity.indicator.rs_engine import run_rs_engine
+
+    run_nse_task(
         "Update Daily RS",
-        run_operation("Updating Daily RS...", task)
+        "Updating Daily RS for index",
+        "RS updated successfully.",
+        run_rs_engine,
+        "nse_india_index",
     )
-# --------------------------------------------------------------------------
+
+
 def operation_update_vix():
-    def task():
-        clear_log()
-        try:
-            log("Starting VIX daily update")
-            update_vix_daily_data()
-            st.session_state.nse_message = "VIX price data updated successfully."
-        except Exception as e:
-            log(f"ERROR in VIX update: {e}")
-            st.session_state.nse_message = f"ERROR {e}"
+    from services.index.vix_service import update_vix_daily_data
 
-    action_button(
+    run_nse_task(
         "Update VIX Data",
-        run_operation("Updating VIX data...", task)
+        "Starting VIX daily update",
+        "VIX price data updated successfully.",
+        update_vix_daily_data,
     )
-# --------------------------------------------------------------------------
-def operation_compute_vix_features():
-    def task():
-        clear_log()
-        try:
-            log("Starting VIX feature computation (TA-Lib)")
-            compute_vix_features_talib()
-            st.session_state.nse_message = "VIX features computed successfully."
-        except Exception as e:
-            log(f"ERROR in VIX feature computation: {e}")
-            st.session_state.nse_message = f"ERROR {e}"
 
-    action_button(
+
+def operation_compute_vix_features():
+    from services.index.vix_service import compute_vix_features_talib
+
+    run_nse_task(
         "Compute VIX Features",
-        run_operation("Computing VIX features...", task)
-    ) 
-# --------------------------------------------------------------------------
+        "Starting VIX feature computation (TA-Lib)",
+        "VIX features computed successfully.",
+        compute_vix_features_talib,
+    )
+
+
 def handle_nse_operations():
-    # show_message("nse_message")
     operations = [
         "Select NSE Operation",
         "Sync Constituents",
@@ -167,7 +137,7 @@ def handle_nse_operations():
         "Update Daily SRT",
         "Update Daily RS",
         "Update VIX Price Data",
-        "Compute VIX Features"
+        "Compute VIX Features",
     ]
 
     operations_map = {
@@ -179,7 +149,7 @@ def handle_nse_operations():
         "Update Daily SRT": operation_srt,
         "Update Daily RS": operation_rs,
         "Update VIX Price Data": operation_update_vix,
-        "Compute VIX Features": operation_compute_vix_features
+        "Compute VIX Features": operation_compute_vix_features,
     }
 
     choice = option_menu(
@@ -199,9 +169,11 @@ def handle_nse_operations():
         menu_icon="",
         default_index=0,
         orientation="vertical",
-        styles=get_vertical_tab_styles()
+        styles=get_vertical_tab_styles(),
+        key="nse_operation_menu",
     )
-    show_message("nse_message")
+
     if choice in operations_map:
         operations_map[choice]()
-# --------------------------------------------------------------------------
+
+    show_message("nse_message")

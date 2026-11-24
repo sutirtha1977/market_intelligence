@@ -68,8 +68,7 @@ def handle_admin_operations():
         load_yahoo()
 
     elif tab_choice == "NSE":
-        # load_nse()
-        st.info("NSE module is under development.")
+        load_nse()
 
     elif tab_choice == "SCANNERS":
         # load_scanners()
