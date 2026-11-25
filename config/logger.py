@@ -105,28 +105,8 @@ def log(message: str, level: str = "info"):
     log_func(message)
 
 
-def log_debug(message: str):
-    _logger.debug(message)
-
-
-def log_info(message: str):
-    _logger.info(message)
-
-
-def log_warning(message: str):
-    _logger.warning(message)
-
-
-def log_error(message: str):
-    _logger.error(message)
-
-
 def log_exception(message: str):
     _logger.exception(message)
-
-
-def log_critical(message: str):
-    _logger.critical(message)
 
 
 # ---------------------------------------------------------

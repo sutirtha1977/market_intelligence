@@ -5,7 +5,6 @@ import threading
 from contextlib import contextmanager
 from typing import Optional, Generator
 
-import psycopg2
 from psycopg2 import pool
 from psycopg2.extensions import (
     connection,
@@ -281,59 +280,3 @@ def get_db_connection_cm() -> Generator[connection, None, None]:
     finally:
 
         close_db_connection(conn)
-
-
-# =========================================================
-# DATABASE HEALTH CHECK
-# =========================================================
-
-def check_database_connection() -> bool:
-
-    try:
-
-        with get_db_connection_cm() as conn:
-
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1")
-                result = cur.fetchone()
-
-            return result == (1,)
-
-    except Exception:
-
-        log_exception("PostgreSQL health check failed")
-        return False
-
-
-# =========================================================
-# DATABASE SHUTDOWN
-# =========================================================
-
-def close_database_connections() -> None:
-
-    global _ENGINE
-    global _CONNECTION_POOL
-
-    with _POOL_LOCK:
-
-        if _CONNECTION_POOL is not None:
-
-            try:
-                _CONNECTION_POOL.closeall()
-                log("PostgreSQL connection pool closed")
-            except Exception:
-                log_exception("Failed to close PostgreSQL pool")
-            finally:
-                _CONNECTION_POOL = None
-
-    with _ENGINE_LOCK:
-
-        if _ENGINE is not None:
-
-            try:
-                _ENGINE.dispose()
-                log("SQLAlchemy engine disposed")
-            except Exception:
-                log_exception("Failed to dispose SQLAlchemy engine")
-            finally:
-                _ENGINE = None

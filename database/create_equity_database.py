@@ -14,13 +14,7 @@ from database.equity.symbols import create_symbol_tables
 from database.equity.price import create_price_tables
 from database.equity.indicators import create_indicator_tables
 from database.equity.nse_tables import create_index_tables
-# from database.equity.scanner import create_scanner_tables
 from database.equity.vix import create_vix_table
-
-# Enable these imports when their setup functions are ready.
-# from database.equity.smc import create_smc_tables
-# from database.equity.vcp_tables import create_vcp_tables
-# from database.equity.post_setup import run_post_setup
 
 
 def create_equity_database(drop_existing=False):
@@ -93,27 +87,6 @@ def create_equity_database(drop_existing=False):
         log("========== CREATING VIX TABLES ==========")
 
         create_vix_table(cur)
-
-        # -------------------------------------------------
-        # SCANNER TABLES
-        # -------------------------------------------------
-
-        # log("========== CREATING SCANNER TABLES ==========")
-
-        # create_scanner_tables(cur)
-
-        # -------------------------------------------------
-        # OPTIONAL TABLES
-        # -------------------------------------------------
-
-        # create_smc_tables(cur)
-        # create_vcp_tables(cur)
-
-        # -------------------------------------------------
-        # POST DATABASE SETUP
-        # -------------------------------------------------
-
-        # run_post_setup(cur)
 
         # -------------------------------------------------
         # COMMIT TRANSACTION

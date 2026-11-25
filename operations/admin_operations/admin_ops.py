@@ -19,10 +19,6 @@ def load_nse():
     from operations.admin_operations.nse_view import handle_nse_operations
     handle_nse_operations()
 
-def load_scanners():
-    from operations.admin_operations.scanners_view import handle_scanners_operations
-    handle_scanners_operations()
-
 def load_database():
     from operations.admin_operations.database_view import handle_database_operations
     handle_database_operations()
@@ -71,7 +67,6 @@ def handle_admin_operations():
         load_nse()
 
     elif tab_choice == "SCANNERS":
-        # load_scanners()
         st.info("Scanners module is under development.")
 
     elif tab_choice == "DATABASE":

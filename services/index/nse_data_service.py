@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import date, timedelta
 import json
 import re
+from typing import Callable, Optional
 from tqdm import tqdm
 
 from config.constants import (
@@ -26,10 +27,6 @@ FALLBACK_START_DATE = date(2018, 1, 1)
 START_DATE = "01-Jan-2000"
 END_DATE = "31-Dec-2017"
 SMA_PERIOD = 124
-
-
-class NSEHistoricalAPIError(RuntimeError):
-    """Raised when the historical endpoint does not return its expected API response."""
 
 
 # --------------------------------------------------------------------------
@@ -386,7 +383,10 @@ def update_nse_index_srt():
         log(f"❌ Error updating SRT: {e}")
         raise
 # --------------------------------------------------------------------------
-def upsert_weekly_monthly_ohlc(price_table: str):
+def upsert_weekly_monthly_ohlc(
+    price_table: str,
+    progress_callback: Optional[Callable[[str, int, int], None]] = None,
+):
     try:
         log(f"START OHLC UPSERT | table={price_table}")
         engine = get_engine()
@@ -395,7 +395,16 @@ def upsert_weekly_monthly_ohlc(price_table: str):
                 f"SELECT DISTINCT symbol_id FROM {price_table} WHERE timeframe='1d'", engine
             )["symbol_id"].tolist()
             log(f"TOTAL SYMBOLS: {len(symbol_ids)}")
-            for symbol_id in tqdm(symbol_ids, desc="Symbols", ncols=100):
+            total_symbols = len(symbol_ids)
+            if progress_callback:
+                progress_callback("symbols", 0, total_symbols)
+
+            for completed_symbols, symbol_id in enumerate(tqdm(
+                symbol_ids,
+                desc="Symbols",
+                ncols=100,
+                disable=progress_callback is not None,
+            ), start=1):
                 df = pd.read_sql(
                     f"""
                     SELECT date, open, high, low, close, volume
@@ -408,6 +417,8 @@ def upsert_weekly_monthly_ohlc(price_table: str):
                 )
                 if df.empty:
                     log(f"SKIP SYMBOL {symbol_id} (no data)")
+                    if progress_callback:
+                        progress_callback("symbols", completed_symbols, total_symbols)
                     continue
                 df["date"] = pd.to_datetime(df["date"])
                 df["volume"] = df["volume"].fillna(0)
@@ -450,6 +461,8 @@ def upsert_weekly_monthly_ohlc(price_table: str):
                             log(f"UPSERT ERROR | symbol={symbol_id} date={r['date']}")
                             log(traceback.format_exc())
                     conn.commit()
+                if progress_callback:
+                    progress_callback("symbols", completed_symbols, total_symbols)
         log("✅ OHLC UPSERT COMPLETED")
     except Exception:
         log("❌ OHLC UPSERT FAILED")
@@ -497,12 +510,19 @@ def update_pct_price_change(price_table: str):
         log("❌ pct_price_change UPDATE FAILED")
         log(traceback.format_exc())
 # --------------------------------------------------------------------------
-def update_weekly_monthly_for_all_symbols(asset_type: str):
+def update_weekly_monthly_for_all_symbols(
+    asset_type: str,
+    progress_callback: Optional[Callable[[str, int, int], None]] = None,
+):
     log("START FULL PIPELINE")
     tables = ASSET_TABLE_CONFIG[asset_type]
     price_table = tables["price"]
-    upsert_weekly_monthly_ohlc(price_table)
+    upsert_weekly_monthly_ohlc(price_table, progress_callback=progress_callback)
+    if progress_callback:
+        progress_callback("price-change update", 0, 1)
     update_pct_price_change(price_table)
+    if progress_callback:
+        progress_callback("price-change update", 1, 1)
 
     log("PIPELINE COMPLETED")
 # --------------------------------------------------------------------------

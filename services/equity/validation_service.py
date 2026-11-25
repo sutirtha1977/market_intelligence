@@ -1,4 +1,4 @@
-from typing import List, Optional, Set
+from typing import List
 import pandas as pd
 
 # --------------------------------------------------------------------------
@@ -34,37 +34,6 @@ def validate_dataframe_columns(
             f"{context}: Missing columns {missing_cols}. "
             f"Available columns: {available}"
         )
-
-# --------------------------------------------------------------------------
-def validate_asset_type(
-    asset_type: str,
-    valid_types: Optional[Set[str]] = None,
-    context: str = "Operation"
-) -> str:
-    if not isinstance(asset_type, str):
-        raise TypeError(
-            f"{context}: Asset type must be string, got {type(asset_type).__name__}"
-        )
-
-    asset_type = asset_type.strip().lower()
-
-    # 🔑 SINGLE SOURCE OF TRUTH
-    if valid_types is None:
-        try:
-            from config.db_config import ASSET_TABLE_CONFIG
-            valid_types = set(ASSET_TABLE_CONFIG.keys())
-        except Exception as e:
-            raise RuntimeError(
-                f"{context}: Failed to load ASSET_TABLE_CONFIG | {e}"
-            )
-
-    if asset_type not in valid_types:
-        raise ValueError(
-            f"{context}: Invalid asset_type '{asset_type}'. "
-            f"Valid options: {sorted(valid_types)}"
-        )
-
-    return asset_type
 
 # --------------------------------------------------------------------------
 def validate_connection(conn) -> None:
