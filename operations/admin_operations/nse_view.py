@@ -92,18 +92,6 @@ def operation_srt():
     )
 
 
-def operation_rs():
-    from services.equity.indicator.rs_engine import run_rs_engine
-
-    run_nse_task(
-        "Update Daily RS",
-        "Updating Daily RS for index",
-        "RS updated successfully.",
-        run_rs_engine,
-        "nse_india_index",
-    )
-
-
 def operation_update_vix():
     from services.index.vix_service import update_vix_daily_data
 
@@ -127,18 +115,43 @@ def operation_compute_vix_features():
 
 
 def handle_nse_operations():
-    operations = [
-        "Select NSE Operation",
-        "Sync Constituents",
-        "Load Historical Data",
-        "Update Incremental Data",
-        "Weekly & Monthly Data",
-        "Refresh Indicators",
-        "Update Daily SRT",
-        "Update Daily RS",
-        "Update VIX Price Data",
-        "Compute VIX Features",
-    ]
+    message_placeholder = st.empty()
+    run_type = st.segmented_control(
+        "Run type",
+        options=["Daily run", "One-time run"],
+        default="Daily run",
+        key="nse_run_type",
+    )
+
+    selected_group = "Daily run" if run_type == "Daily run" else "One-time run"
+    operations_by_group = {
+        "One-time run": [
+            "Select Operation",
+            "Sync Constituents",
+            "Load Historical Data",
+        ],
+        "Daily run": [
+            "Select Operation",
+            "Update Incremental Data",
+            "Weekly & Monthly Data",
+            "Refresh Indicators",
+            "Update Daily SRT",
+            "Update VIX Price Data",
+            "Compute VIX Features",
+        ],
+    }
+    icons_by_group = {
+        "One-time run": ["tools", "gear", "book"],
+        "Daily run": [
+            "tools",
+            "arrow-repeat",
+            "calendar",
+            "bar-chart-line",
+            "lightning",
+            "gear",
+            "cpu",
+        ],
+    }
 
     operations_map = {
         "Sync Constituents": operation_constituents,
@@ -147,33 +160,27 @@ def handle_nse_operations():
         "Weekly & Monthly Data": operation_weekly_monthly,
         "Refresh Indicators": operation_indicators,
         "Update Daily SRT": operation_srt,
-        "Update Daily RS": operation_rs,
         "Update VIX Price Data": operation_update_vix,
         "Compute VIX Features": operation_compute_vix_features,
     }
 
     choice = option_menu(
         menu_title=None,
-        options=operations,
-        icons=["tools", 
-               "gear", 
-               "book", 
-               "arrow-repeat", 
-               "calendar", 
-               "bar-chart-line", 
-               "lightning", 
-               "activity",
-               "gear", 
-               "cpu"
-            ],
+        options=operations_by_group[selected_group],
+        icons=icons_by_group[selected_group],
         menu_icon="",
         default_index=0,
         orientation="vertical",
         styles=get_vertical_tab_styles(),
-        key="nse_operation_menu",
+        key=(
+            "nse_daily_operation_menu"
+            if selected_group == "Daily run"
+            else "nse_one_time_operation_menu"
+        ),
     )
 
     if choice in operations_map:
         operations_map[choice]()
 
-    show_message("nse_message")
+    with message_placeholder.container():
+        show_message("nse_message")
