@@ -12,38 +12,53 @@ from services.equity.utility_service import upsert_nse_holidays
 st.session_state.setdefault("db_message", None)
 st.session_state.setdefault("db_dates_df", None)
 # --------------------------------------------------------------------------
-# def operation_create_database():
-#     db_type = st.radio(
-#         label="Select Database Type :",
-#         options=["Equity", "Derivative"],
-#         key="db_create_type",
-#         horizontal=True,
-#         label_visibility="visible"
-#     )
-#     drop_existing = st.checkbox(
-#         "Drop existing tables (❌ DANGEROUS)",
-#         key="db_drop_existing"
-#     )
-#     def task():
-#         clear_log()
-#         try:
-#             log(f"Creating {db_type}, drop={drop_existing}")
-#             if db_type.upper() == "EQUITY":
-#                 create_equity_database(drop_existing)
-#             else:
-#                 create_fno_database(drop_existing)
-#             st.session_state.db_message = f"{db_type} created successfully!"
-#         except Exception as e:
-#             st.session_state.db_message = f"ERROR {e}"
-#     action_button(
-#         "Create Database",
-#         run_operation("Creating database...", task)
-#     )
-def operation_create_database():
-    drop_existing = st.checkbox(
-        "Drop existing tables (❌ DANGEROUS)",
-        key="db_drop_existing"
-    )
+# Description on the left, action on the right. Every card uses the same
+# split, so all buttons share one position and width.
+CARD_COLUMNS = [3.2, 1.2]
+
+# Any column that contains the .btn-col marker gets full-width, equal-height
+# buttons, whatever markup action_button produces.
+CARD_STYLE = """
+<style>
+[data-testid="stColumn"]:has(.btn-col) [data-testid="stElementContainer"],
+[data-testid="stColumn"]:has(.btn-col) [data-testid="stButton"],
+[data-testid="stColumn"]:has(.btn-col) .stButton,
+[data-testid="stColumn"]:has(.btn-col) div:has(> button) {
+    width: 100% !important;
+}
+[data-testid="stColumn"]:has(.btn-col) button {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 2.75rem;
+    justify-content: center;
+    white-space: nowrap;
+}
+[data-testid="stElementContainer"]:has(.btn-col) {
+    display: none;
+}
+</style>
+"""
+
+
+def button_column_marker() -> None:
+    st.markdown('<span class="btn-col"></span>', unsafe_allow_html=True)
+# --------------------------------------------------------------------------
+def card_header(title: str, description: str) -> None:
+    st.markdown(f"**{title}**")
+    st.caption(description)
+# --------------------------------------------------------------------------
+def operation_create_database(options_slot):
+    with options_slot:
+        drop_existing = st.checkbox(
+            "Drop existing tables",
+            key="db_drop_existing",
+            help="Deletes every existing table and all of its data before recreating the schema."
+        )
+        if drop_existing:
+            st.warning(
+                "All existing tables and their data will be permanently deleted.",
+                icon=":material/warning:"
+            )
     def task():
         try:
             clear_log()
@@ -63,7 +78,7 @@ def operation_create_database():
         "Create Equity Database",
         task
     )
-    
+
 # --------------------------------------------------------------------------
 def operation_refresh_symbols():
     def task():
@@ -81,7 +96,7 @@ def operation_refresh_symbols():
         "Refresh Symbols",
         task
     )
-    
+
 # --------------------------------------------------------------------------
 def operation_update_calendar():
     def task():
@@ -95,28 +110,51 @@ def operation_update_calendar():
         "Update Exchange Calendar",
         task
     )
-    
+
 # --------------------------------------------------------------------------
 def handle_database_operations():
-    st.subheader("Database operations")
-    st.caption("Choose an operation below. Each action runs when you click its button.")
+    st.markdown(CARD_STYLE, unsafe_allow_html=True)
+
+    # st.subheader("Database operations")
+    # st.caption("Set up the database and keep reference data current.")
 
     message_placeholder = st.empty()
 
+    st.markdown("##### Setup")
     with st.container(border=True):
-        st.subheader("Initialize equity database")
-        st.caption("Create the required equity database tables and indexes.")
-        operation_create_database()
+        text_col, action_col = st.columns(CARD_COLUMNS, vertical_alignment="center")
+        with text_col:
+            card_header(
+                "Initialize equity database",
+                "Create the required equity database tables and indexes."
+            )
+            options_slot = st.container()
+        with action_col:
+            button_column_marker()
+            operation_create_database(options_slot)
+
+    st.markdown("##### Reference data")
+    with st.container(border=True):
+        text_col, action_col = st.columns(CARD_COLUMNS, vertical_alignment="center")
+        with text_col:
+            card_header(
+                "Symbols",
+                "Refresh the market symbols used by the application."
+            )
+        with action_col:
+            button_column_marker()
+            operation_refresh_symbols()
 
     with st.container(border=True):
-        st.subheader("Refresh symbols")
-        st.caption("Refresh the market symbols used by the application.")
-        operation_refresh_symbols()
-
-    with st.container(border=True):
-        st.subheader("Update NSE calendar")
-        st.caption("Synchronize the NSE exchange holiday calendar.")
-        operation_update_calendar()
+        text_col, action_col = st.columns(CARD_COLUMNS, vertical_alignment="center")
+        with text_col:
+            card_header(
+                "NSE calendar",
+                "Synchronize the NSE exchange holiday calendar."
+            )
+        with action_col:
+            button_column_marker()
+            operation_update_calendar()
 
     with message_placeholder.container():
         show_message("db_message")

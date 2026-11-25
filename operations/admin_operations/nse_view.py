@@ -24,6 +24,27 @@ st.session_state.setdefault("nse_runs", {})
 st.session_state.setdefault("nse_summary", None)
 st.session_state.setdefault("nse_progress", None)
 
+# One column layout shared by the header row and every operation row, so the
+# button column has the same left edge and width everywhere.
+# [icon, title + description, status, button]
+ROW_COLUMNS = [0.5, 4, 2.4, 1.6]
+
+# Makes every button inside the tabs fill its column, so all buttons share one
+# width regardless of label length.
+BUTTON_STYLE = """
+<style>
+[data-testid="stTabs"] .stElementContainer:has(.stButton),
+[data-testid="stTabs"] .stButton {
+    width: 100% !important;
+}
+[data-testid="stTabs"] .stButton > button {
+    width: 100% !important;
+    min-height: 2.5rem;
+    white-space: nowrap;
+}
+</style>
+"""
+
 
 # ---------------------------------------------------------------------------
 # Runners (lazy imports keep the page fast to load)
@@ -89,11 +110,11 @@ DAILY = [
               "Update prices", _update_incremental, "Updating incremental data"),
     Operation("weekly_monthly", "Weekly & monthly bars",
               "Aggregate daily prices into weekly and monthly bars.",
-              "Rebuild bars", _update_weekly_monthly, "Updating weekly/monthly data",
+              "Update bars", _update_weekly_monthly, "Updating weekly/monthly data",
               progress_label="Weekly/monthly"),
     Operation("indicators", "Indicators",
               "Recalculate technical indicators for every index.",
-              "Refresh indicators", _refresh_indicators, "Refreshing indicators",
+              "Update indicators", _refresh_indicators, "Refreshing indicators",
               progress_label="Indicators"),
     Operation("srt", "Daily SRT",
               "Recompute the daily SRT values.",
@@ -103,7 +124,7 @@ DAILY = [
               "Update VIX", _update_vix, "Starting VIX daily update"),
     Operation("vix_features", "VIX features",
               "Calculate VIX features with TA-Lib.",
-              "Compute features", _compute_vix_features, "Starting VIX feature computation (TA-Lib)"),
+              "Update features", _compute_vix_features, "Starting VIX feature computation (TA-Lib)"),
 ]
 
 ONE_TIME = [
@@ -249,7 +270,7 @@ def _render_row(op: Operation, area: DeltaGenerator) -> None:
     """Draw one operation row and run it behind the transparent blocker."""
     with st.container(border=True):
         icon_col, text_col, status_col, action_col = st.columns(
-            [0.5, 4, 2.4, 1.4], vertical_alignment="center"
+            ROW_COLUMNS, vertical_alignment="center"
         )
         icon_col.markdown(f"### {STATE_ICON[_state_of(op)]}")
         text_col.markdown(f"**{op.title}**")
@@ -288,8 +309,10 @@ def _render_summary_metrics() -> None:
 
 
 def handle_nse_operations() -> None:
-    st.subheader("NSE index data")
-    st.caption("Update index prices, indicators and VIX data.")
+    # st.subheader("NSE index data")
+    # st.caption("Update index prices, indicators and VIX data.")
+
+    st.markdown(BUTTON_STYLE, unsafe_allow_html=True)
 
     _render_summary_metrics()
 
@@ -303,7 +326,9 @@ def handle_nse_operations() -> None:
     daily_tab, one_time_tab = st.tabs(["Daily update", "One-time setup"])
 
     with daily_tab:
-        head, action = st.columns([4, 1.4], vertical_alignment="center")
+        # Same columns as the rows below, so "Run all steps" sits directly
+        # above the row buttons with the same width.
+        _, head, _, action = st.columns(ROW_COLUMNS, vertical_alignment="center")
         head.caption("Steps run top to bottom. Each step needs the one before it.")
         with action:
             result = action_button(

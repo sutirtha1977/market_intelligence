@@ -20,21 +20,37 @@ def get_asset_choice(key: str) -> tuple[str, str]:
     )
     return asset_label, ASSET_CHOICE_MAP[asset_label]
 # --------------------------------------------------------------------------
+def section_header(title: str, description: str) -> None:
+    st.markdown(f"#### {title}")
+    st.caption(description)
+# --------------------------------------------------------------------------
 def operation_price_data(progress_placeholder):
-    asset_label, asset_type = get_asset_choice("yahoo_price_asset")
-    symbols = st.text_input(
-        "Symbols",
-        value="ALL",
-        key="yahoo_symbols",
-        help="Enter symbols to update: ALL or comma-separated (e.g., RELIANCE,TCS,INFY)."
-    ).strip()
-    start_date = st.date_input(
-        "Start date",
-        value=datetime(1999, 1, 1),
-        min_value=datetime(1980, 1, 1),
-        max_value=datetime.today(),
-        key="yahoo_start_date"
+    section_header(
+        "Price data",
+        "Download historical prices from Yahoo Finance for the selected asset type."
     )
+
+    asset_col, symbols_col, date_col = st.columns([1.2, 2, 1.2])
+    with asset_col:
+        asset_label, asset_type = get_asset_choice("yahoo_price_asset")
+    with symbols_col:
+        symbols = st.text_input(
+            "Symbols",
+            value="ALL",
+            key="yahoo_symbols",
+            help="Enter symbols to update: ALL or comma-separated (e.g., RELIANCE,TCS,INFY)."
+        ).strip()
+    with date_col:
+        start_date = st.date_input(
+            "Start date",
+            value=datetime(1999, 1, 1),
+            min_value=datetime(1980, 1, 1),
+            max_value=datetime.today(),
+            key="yahoo_start_date"
+        )
+
+    st.divider()
+
     def task():
         clear_log()
         try:
@@ -65,10 +81,20 @@ def operation_price_data(progress_placeholder):
         "Update Price Data",
         task,
         transparent_overlay=True
-    ) 
+    )
 # --------------------------------------------------------------------------
 def operation_indicators(progress_placeholder):
-    asset_label, asset_type = get_asset_choice("yahoo_indicator_asset")
+    section_header(
+        "Indicators",
+        "Recalculate technical indicators for every symbol of the selected asset type."
+    )
+
+    asset_col, _ = st.columns([1.2, 3.2])
+    with asset_col:
+        asset_label, asset_type = get_asset_choice("yahoo_indicator_asset")
+
+    st.divider()
+
     def task():
         try:
             log(f"Refreshing indicators for {asset_type}")
@@ -96,11 +122,20 @@ def operation_indicators(progress_placeholder):
     )
 # --------------------------------------------------------------------------
 def operation_additional(progress_placeholder):
-    selection = st.selectbox(
-        "Additional operation",
-        ["RS for India Equity"],
-        key="yahoo_additional_operation"
+    section_header(
+        "Additional operations",
+        "Supplementary calculations that run on top of the price data."
     )
+
+    select_col, _ = st.columns([2, 2.4])
+    with select_col:
+        selection = st.selectbox(
+            "Additional operation",
+            ["RS for India Equity"],
+            key="yahoo_additional_operation"
+        )
+
+    st.divider()
 
     def task():
         try:
@@ -136,14 +171,17 @@ def operation_additional(progress_placeholder):
             st.session_state.yahoo_message = f"ERROR: {e}"
 
     action_button(
-        "UPDATE",
+        "Update Relative Strength",
         task,
         transparent_overlay=True
     )
 # --------------------------------------------------------------------------
 def handle_yahoo_operations():
 
-    operations = ["PRICE DATA", "INDICATORS", "ADDITIONAL"]
+    # st.subheader("Yahoo Finance data")
+    # st.caption("Update prices, indicators and relative strength for equity assets.")
+
+    operations = ["Price data", "Indicators", "Additional"]
 
     choice = option_menu(
         menu_title=None,
@@ -155,20 +193,23 @@ def handle_yahoo_operations():
         styles=get_horizontal_internal_tab_styles()
     )
 
-    with st.container():
-        message_placeholder = st.empty()
-        progress_placeholder = st.empty()
+    # Same order as the original: result message, then progress bar, then the form.
+    message_placeholder = st.empty()
+    progress_placeholder = st.empty()
+
+    with st.container(border=True):
+        form_container = st.container()
 
     operations_map = {
-        "PRICE DATA": lambda: operation_price_data(progress_placeholder),
-        "INDICATORS": lambda: operation_indicators(progress_placeholder),
-        "ADDITIONAL": lambda: operation_additional(progress_placeholder)
+        "Price data": lambda: operation_price_data(progress_placeholder),
+        "Indicators": lambda: operation_indicators(progress_placeholder),
+        "Additional": lambda: operation_additional(progress_placeholder)
     }
 
     if choice in operations_map:
-        operations_map[choice]()
+        with form_container:
+            operations_map[choice]()
 
     with message_placeholder.container():
         show_message("yahoo_message")
-        
 # --------------------------------------------------------------------------
