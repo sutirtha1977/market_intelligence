@@ -3,8 +3,6 @@ import pandas as pd
 from typing import Callable, List, Optional, Tuple
 import traceback
 
-from psycopg2.extras import execute_values
-
 from config.logger import log
 from config.constants import FREQUENCIES
 from config.db_config import ASSET_TABLE_CONFIG
@@ -100,28 +98,34 @@ def _upsert_rows(conn, price_table: str, rows: list, silent: bool = False):
         log(f"▶ UPSERT START | table={price_table} | rows={len(rows)}")
     try:
         with conn.cursor() as cur:
-            execute_values(
-                cur,
-                f"""
-                INSERT INTO {price_table} (
-                    symbol_id, timeframe, date,
-                    open, high, low, close, adj_close,
-                    volume, pct_price_change
+            cur.execute("SAVEPOINT yahoo_symbol_upsert")
+            try:
+                cur.executemany(
+                    f"""
+                    INSERT INTO {price_table} (
+                        symbol_id, timeframe, date,
+                        open, high, low, close, adj_close,
+                        volume, pct_price_change
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (symbol_id, timeframe, date)
+                    DO UPDATE SET
+                        open=EXCLUDED.open,
+                        high=EXCLUDED.high,
+                        low=EXCLUDED.low,
+                        close=EXCLUDED.close,
+                        adj_close=EXCLUDED.adj_close,
+                        volume=EXCLUDED.volume,
+                        pct_price_change=EXCLUDED.pct_price_change
+                    """,
+                    rows,
                 )
-                VALUES %s
-                ON CONFLICT (symbol_id, timeframe, date)
-                DO UPDATE SET
-                    open=EXCLUDED.open,
-                    high=EXCLUDED.high,
-                    low=EXCLUDED.low,
-                    close=EXCLUDED.close,
-                    adj_close=EXCLUDED.adj_close,
-                    volume=EXCLUDED.volume,
-                    pct_price_change=EXCLUDED.pct_price_change
-                """,
-                rows,
-                page_size=1000,
-            )
+            except Exception:
+                cur.execute("ROLLBACK TO SAVEPOINT yahoo_symbol_upsert")
+                cur.execute("RELEASE SAVEPOINT yahoo_symbol_upsert")
+                raise
+            else:
+                cur.execute("RELEASE SAVEPOINT yahoo_symbol_upsert")
         if not silent:
             log("✅ UPSERT END")
     except Exception:
@@ -146,7 +150,6 @@ def insert_yahoo_price_data(
                 symbol_rows = _fetch_symbols_from_db(cur, symbol_table, symbols)
             for tf in FREQUENCIES:
                 log(f"▶ TIMEFRAME START | {tf}")
-                timeframe_rows = []
                 total_symbols = len(symbol_rows)
                 if progress_callback:
                     progress_callback(tf, 0, total_symbols)
@@ -157,13 +160,17 @@ def insert_yahoo_price_data(
                         if df is None or df.empty:
                             failed_symbols.append(original_symbol)
                         else:
-                            timeframe_rows.extend(_build_rows(symbol_id, tf, df))
+                            _upsert_rows(
+                                conn,
+                                price_table,
+                                _build_rows(symbol_id, tf, df),
+                                silent=True,
+                            )
                     except Exception:
                         failed_symbols.append(original_symbol)
                         log(f"❌ SYMBOL FAILED | {symbol} | {tf}\n{traceback.format_exc()}")
                     if progress_callback:
                         progress_callback(tf, completed, total_symbols)
-                _upsert_rows(conn, price_table, timeframe_rows, silent=True)
                 conn.commit()
                 log(f"✅ TIMEFRAME END | {tf}")
     except Exception:
