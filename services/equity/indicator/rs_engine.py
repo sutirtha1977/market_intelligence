@@ -1,3 +1,5 @@
+from typing import Callable, Optional
+
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -5,7 +7,7 @@ from sqlalchemy import text
 
 from database.connection import get_engine, get_db_connection_cm
 from config.logger import log
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from config.constants import FREQUENCIES
 
 
@@ -115,7 +117,10 @@ def ta_falling(series, bars=3):
 # ==========================================================================
 # MAIN ENGINE
 # ==========================================================================
-def run_rs_engine(asset_type):
+def run_rs_engine(
+    asset_type,
+    progress_callback: Optional[Callable[[str, str, int, int], None]] = None,
+):
 
     engine = get_engine()
 
@@ -220,6 +225,16 @@ def run_rs_engine(asset_type):
             # ==================================================================
             # SYMBOL LOOP
             # ==================================================================
+            total_symbols = stock_df["symbol_id"].nunique()
+            completed_symbols = 0
+
+            def report_progress(phase: str, completed: int, total: int) -> None:
+                if progress_callback:
+                    progress_callback(timeframe, phase, completed, total)
+
+            if progress_callback:
+                report_progress("Computing RS", 0, total_symbols)
+
             for symbol_id, g in stock_df.groupby(
                 "symbol_id",
                 sort=False
@@ -244,6 +259,8 @@ def run_rs_engine(asset_type):
                 )
 
                 if merged.empty:
+                    completed_symbols += 1
+                    report_progress("Computing RS", completed_symbols, total_symbols)
                     continue
 
                 # --------------------------------------------------------------
@@ -257,6 +274,8 @@ def run_rs_engine(asset_type):
                 )
 
                 if merged.empty:
+                    completed_symbols += 1
+                    report_progress("Computing RS", completed_symbols, total_symbols)
                     continue
 
                 # --------------------------------------------------------------
@@ -270,6 +289,8 @@ def run_rs_engine(asset_type):
                 )
 
                 if len(merged) < min_bars_needed:
+                    completed_symbols += 1
+                    report_progress("Computing RS", completed_symbols, total_symbols)
                     continue
 
                 # ==============================================================
@@ -345,6 +366,8 @@ def run_rs_engine(asset_type):
                 ).copy()
 
                 if merged.empty:
+                    completed_symbols += 1
+                    report_progress("Computing RS", completed_symbols, total_symbols)
                     continue
 
                 # --------------------------------------------------------------
@@ -363,6 +386,8 @@ def run_rs_engine(asset_type):
                         "rs_ma_falling"
                     ]]
                 )
+                completed_symbols += 1
+                report_progress("Computing RS", completed_symbols, total_symbols)
 
             # ==================================================================
             # FINAL DF
@@ -373,6 +398,8 @@ def run_rs_engine(asset_type):
                     f"❌ No RS generated "
                     f"[{timeframe}]"
                 )
+                if total_symbols == 0:
+                    report_progress("Computing RS", 1, 1)
 
                 continue
 
@@ -442,9 +469,13 @@ def run_rs_engine(asset_type):
                 # --------------------------------------------------------------
                 # BATCH UPSERT
                 # --------------------------------------------------------------
-                for i in tqdm(
-                    range(0, len(data), BATCH_SIZE)
-                ):
+                total_batches = (len(data) + BATCH_SIZE - 1) // BATCH_SIZE
+                report_progress("Saving RS", 0, total_batches)
+
+                for completed_batches, i in enumerate(tqdm(
+                    range(0, len(data), BATCH_SIZE),
+                    disable=progress_callback is not None,
+                ), start=1):
 
                     cur.executemany(f"""
                         INSERT INTO {INDICATORS} (
@@ -486,6 +517,7 @@ def run_rs_engine(asset_type):
                                 EXCLUDED.rs_ma_falling
 
                     """, data[i:i + BATCH_SIZE])
+                    report_progress("Saving RS", completed_batches, total_batches)
 
                 conn.commit()
 

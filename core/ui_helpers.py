@@ -161,7 +161,8 @@ def action_button(
     label: str,
     callback: Callable,
     color: Optional[str] = None,
-    clear_logs_before: bool = True
+    clear_logs_before: bool = True,
+    transparent_overlay: bool = False
 ) -> Any:
     """
     Execute a callback through a styled Streamlit button.
@@ -193,6 +194,9 @@ def action_button(
         return None
 
     overlay = st.empty()
+    blocker_class = "market-operation-blocker"
+    if transparent_overlay:
+        blocker_class += " market-operation-blocker-transparent"
     st.session_state.busy = True
 
     try:
@@ -207,6 +211,10 @@ def action_button(
                     background: rgba(15, 23, 42, 0.32);
                     backdrop-filter: blur(3px);
                     cursor: wait;
+                }}
+                .market-operation-blocker-transparent {{
+                    background: rgba(15, 23, 42, 0.08);
+                    backdrop-filter: none;
                 }}
                 .market-operation-card {{
                     position: fixed;
@@ -261,7 +269,7 @@ def action_button(
                     .market-operation-spinner {{ animation: none; }}
                 }}
                 </style>
-                <div class="market-operation-blocker" aria-hidden="true"></div>
+                <div class="{blocker_class}" aria-hidden="true"></div>
                 <div class="market-operation-card" role="status" aria-live="polite">
                     <span class="market-operation-spinner" aria-hidden="true"></span>
                     <div class="market-operation-copy">

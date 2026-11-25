@@ -63,7 +63,8 @@ def operation_price_data(progress_placeholder):
             st.session_state.yahoo_message = f"Error: {e}"
     action_button(
         "Update Price Data",
-        task
+        task,
+        transparent_overlay=True
     ) 
 # --------------------------------------------------------------------------
 def operation_indicators(progress_placeholder):
@@ -90,29 +91,59 @@ def operation_indicators(progress_placeholder):
             st.session_state.yahoo_message = f"ERROR: {e}"
     action_button(
         "Refresh Indicators",
-        task
+        task,
+        transparent_overlay=True
     )
 # --------------------------------------------------------------------------
-def operation_vcp(): 
-    from services.equity.indicator.vcp_engine import run_vcp_engine
-    asset_label, asset_type = get_asset_choice("yahoo_vcp_asset")
+def operation_additional(progress_placeholder):
+    selection = st.selectbox(
+        "Additional operation",
+        ["RS for India Equity"],
+        key="yahoo_additional_operation"
+    )
+
     def task():
-        # clear_log()
         try:
-            log(f"Starting VCP computation for {asset_type}")
-            run_vcp_engine(asset_type=asset_type)
-            st.session_state.yahoo_message = f"{asset_label} VCP Data update successful."
+            if selection == "RS for India Equity":
+                from services.equity.indicator.rs_engine import run_rs_engine
+
+                asset_type = ASSET_CHOICE_MAP["INDIA Equity"]
+                log(f"Starting RS computation for {asset_type}")
+
+                progress_placeholder.progress(
+                    0.0,
+                    text="Preparing RS update..."
+                )
+
+                def update_progress(
+                    timeframe: str,
+                    phase: str,
+                    completed: int,
+                    total: int
+                ) -> None:
+                    progress = completed / total if total else 0.0
+                    progress_placeholder.progress(
+                        progress,
+                        text=f"Timeframe {timeframe} - {phase}: {completed}/{total}"
+                    )
+
+                run_rs_engine(
+                    asset_type=asset_type,
+                    progress_callback=update_progress,
+                )
+                st.session_state.yahoo_message = "India Equity Relative Strength update successful."
         except Exception as e:
-            st.session_state.yahoo_message = f"Error: {e}"
+            st.session_state.yahoo_message = f"ERROR: {e}"
 
     action_button(
-        "Compute VCP Data",
-        task
+        "UPDATE",
+        task,
+        transparent_overlay=True
     )
 # --------------------------------------------------------------------------
 def handle_yahoo_operations():
 
-    operations = ["PRICE DATA", "INDICATORS", "VCP"]
+    operations = ["PRICE DATA", "INDICATORS", "ADDITIONAL"]
 
     choice = option_menu(
         menu_title=None,
@@ -131,7 +162,7 @@ def handle_yahoo_operations():
     operations_map = {
         "PRICE DATA": lambda: operation_price_data(progress_placeholder),
         "INDICATORS": lambda: operation_indicators(progress_placeholder),
-        "VCP": operation_vcp
+        "ADDITIONAL": lambda: operation_additional(progress_placeholder)
     }
 
     if choice in operations_map:

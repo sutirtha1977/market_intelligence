@@ -498,40 +498,40 @@ def render_sidebar_menu():
 
     menu_options = [
         "Home",
-        "Global Trends",
-        "INDIA Equity",
-        "USA Equity",
-        "NSE Indices",
-        "NSE FnO",
-        "Equity Signals",
-        "Backtest Scanners",
-        "Strategy Builder",
+        # "Global Trends",
+        # "INDIA Equity",
+        # "USA Equity",
+        # "NSE Indices",
+        # "NSE FnO",
+        # "Equity Signals",
+        # "Backtest Scanners",
+        # "Strategy Builder",
         "System Admin",
     ]
 
     icons = [
         "house-fill",
-        "globe",
-        "bar-chart-fill",
-        "currency-dollar",
-        "graph-up-arrow",
-        "lightning-charge-fill",
-        "search-heart-fill",
-        "clock-history",
-        "cpu-fill",
+        # "globe",
+        # "bar-chart-fill",
+        # "currency-dollar",
+        # "graph-up-arrow",
+        # "lightning-charge-fill",
+        # "search-heart-fill",
+        # "clock-history",
+        # "cpu-fill",
         "gear-fill",
     ]
 
     menu_map = {
         "Home": "home",
-        "Global Trends": "global_overview",
-        "INDIA Equity": "india_equity",
-        "USA Equity": "usa_equity",
-        "NSE Indices": "nse_index_overview",
-        "NSE FnO": "derivative_dashboard",
-        "Equity Signals": "scanner_operations",
-        "Backtest Scanners": "backtesting_operations",
-        "Strategy Builder": "playground",
+        # "Global Trends": "global_overview",
+        # "INDIA Equity": "india_equity",
+        # "USA Equity": "usa_equity",
+        # "NSE Indices": "nse_index_overview",
+        # "NSE FnO": "derivative_dashboard",
+        # "Equity Signals": "scanner_operations",
+        # "Backtest Scanners": "backtesting_operations",
+        # "Strategy Builder": "playground",
         "System Admin": "admin_operations",
     }
 
@@ -619,77 +619,77 @@ def render_content_box(menu):
         # from operations.main_dashboard.home_view import handle_home_operations
         # handle_home_operations()
 
-    elif menu == "global_overview":
-        render_section_header(
-            "GLOBAL TRENDS",
-            "International market trends and correlations",
-            "globe"
-        )
-        # from operations.global_dashboard.global_overview_ops import handle_dashboard_ops
-        # handle_dashboard_ops()
+    # elif menu == "global_overview":
+    #     render_section_header(
+    #         "GLOBAL TRENDS",
+    #         "International market trends and correlations",
+    #         "globe"
+    #     )
+    #     from operations.global_dashboard.global_overview_ops import handle_dashboard_ops
+    #     handle_dashboard_ops()
 
-    elif menu == "india_equity":
-        render_section_header(
-            "INDIA EQUITY",
-            "Indian stock market analysis and portfolio tracking",
-            "bar-chart-fill"
-        )
-        # from operations.main_dashboard.equity_view import equity_view
-        # equity_view(asset_key="yahoo_india_equity", region_prefix="india")
+    # elif menu == "india_equity":
+    #     render_section_header(
+    #         "INDIA EQUITY",
+    #         "Indian stock market analysis and portfolio tracking",
+    #         "bar-chart-fill"
+    #     )
+    #     from operations.main_dashboard.equity_view import equity_view
+    #     equity_view(asset_key="yahoo_india_equity", region_prefix="india")
 
-    elif menu == "usa_equity":
-        render_section_header(
-            "USA EQUITY",
-            "US stock market analysis and portfolio tracking",
-            "currency-dollar"
-        )
-        # from operations.main_dashboard.equity_view import equity_view
-        # equity_view(asset_key="yahoo_usa_equity", region_prefix="usa")
+    # elif menu == "usa_equity":
+    #     render_section_header(
+    #         "USA EQUITY",
+    #         "US stock market analysis and portfolio tracking",
+    #         "currency-dollar"
+    #     )
+    #     from operations.main_dashboard.equity_view import equity_view
+    #     equity_view(asset_key="yahoo_usa_equity", region_prefix="usa")
 
-    elif menu == "nse_index_overview":
-        render_section_header(
-            "INDEX TRACKING",
-            "India's national stock exchange indices",
-            "graph-up-arrow"
-        )
-        # from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
-        # handle_index_overview_operations()
+    # elif menu == "nse_index_overview":
+    #     render_section_header(
+    #         "INDEX TRACKING",
+    #         "India's national stock exchange indices",
+    #         "graph-up-arrow"
+    #     )
+    #     from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
+    #     handle_index_overview_operations()
 
-    elif menu == "derivative_dashboard":
-        render_section_header(
-            "F&O INSIGHTS",
-            "Futures, options, and derivatives trading",
-            "lightning-fill"
-        )
-        # from operations.derivatives_operations.derivative_ops import handle_derivative_operations
-        # handle_derivative_operations()
+    # elif menu == "derivative_dashboard":
+    #     render_section_header(
+    #         "F&O INSIGHTS",
+    #         "Futures, options, and derivatives trading",
+    #         "lightning-fill"
+    #     )
+    #     from operations.derivatives_operations.derivative_ops import handle_derivative_operations
+    #     handle_derivative_operations()
 
-    elif menu == "scanner_operations":
-        render_section_header(
-            "TRADE SIGNALS",
-            "Automated trading signal detection",
-            "search"
-        )
-        # from operations.scanners.scanner_ops import handle_scanner_operations
-        # handle_scanner_operations()
+    # elif menu == "scanner_operations":
+    #     render_section_header(
+    #         "TRADE SIGNALS",
+    #         "Automated trading signal detection",
+    #         "search"
+    #     )
+    #     from operations.scanners.scanner_ops import handle_scanner_operations
+    #     handle_scanner_operations()
 
-    elif menu == "backtesting_operations":
-        render_section_header(
-            "STRATEGY TESTING",
-            "Validate strategies with historical data",
-            "clock-history"
-        )
-        # from operations.scanners.backtest_ops import handle_scanner_backtest_operations
-        # handle_scanner_backtest_operations()
+    # elif menu == "backtesting_operations":
+    #     render_section_header(
+    #         "STRATEGY TESTING",
+    #         "Validate strategies with historical data",
+    #         "clock-history"
+    #     )
+    #     from operations.scanners.backtest_ops import handle_scanner_backtest_operations
+    #     handle_scanner_backtest_operations()
 
-    elif menu == "playground":
-        render_section_header(
-            "STRATEGY BUILDER",
-            "Experiment with custom strategies",
-            "cpu"
-        )
-        # from operations.playground_ops import handle_playground_operations
-        # handle_playground_operations()
+    # elif menu == "playground":
+    #     render_section_header(
+    #         "STRATEGY BUILDER",
+    #         "Experiment with custom strategies",
+    #         "cpu"
+    #     )
+    #     from operations.playground_ops import handle_playground_operations
+    #     handle_playground_operations()
 
     elif menu == "admin_operations":
         render_section_header(
