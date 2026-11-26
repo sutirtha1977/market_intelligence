@@ -504,7 +504,7 @@ def render_sidebar_menu():
         # "NSE Indices",
         # "NSE FnO",
         # "Equity Signals",
-        # "Backtest Scanners",
+        "Scanners",
         # "Strategy Builder",
         "System Admin",
     ]
@@ -516,8 +516,8 @@ def render_sidebar_menu():
         # "currency-dollar",
         # "graph-up-arrow",
         # "lightning-charge-fill",
-        # "search-heart-fill",
         # "clock-history",
+        "search-heart-fill",
         # "cpu-fill",
         "gear-fill",
     ]
@@ -530,7 +530,7 @@ def render_sidebar_menu():
         # "NSE Indices": "nse_index_overview",
         # "NSE FnO": "derivative_dashboard",
         # "Equity Signals": "scanner_operations",
-        # "Backtest Scanners": "backtesting_operations",
+        "Scanners": "scanner_operations",
         # "Strategy Builder": "playground",
         "System Admin": "admin_operations",
     }
@@ -668,19 +668,19 @@ def render_content_box(menu):
     #     render_section_header(
     #         "TRADE SIGNALS",
     #         "Automated trading signal detection",
-    #         "search"
+    #         "clock-history"
     #     )
     #     from operations.scanners.scanner_ops import handle_scanner_operations
     #     handle_scanner_operations()
 
-    # elif menu == "backtesting_operations":
-    #     render_section_header(
-    #         "STRATEGY TESTING",
-    #         "Validate strategies with historical data",
-    #         "clock-history"
-    #     )
-    #     from operations.scanners.backtest_ops import handle_scanner_backtest_operations
-    #     handle_scanner_backtest_operations()
+    elif menu == "scanner_operations":
+        render_section_header(
+            "TRADE SIGNALS",
+            "Automated trading signal detection",
+            "search"
+        )
+        from operations.scanners.scanner_ops import handle_scanner_backtest_operations
+        handle_scanner_backtest_operations()
 
     # elif menu == "playground":
     #     render_section_header(
