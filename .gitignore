@@ -1,3 +1,7 @@
 .venv/
 /logs/
 /audit_trail.log
+
+# Python bytecode
+__pycache__/
+*.py[cod]
