@@ -1,3 +1,4 @@
+# services/scanners/scanner_weekly/data_engine_weekly.py
 import pandas as pd
 from config.db_config import ASSET_TABLE_CONFIG
 from database.connection import get_engine
