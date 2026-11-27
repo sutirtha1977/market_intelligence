@@ -1,9 +1,9 @@
 git add .
 git commit -m "changes done on $(date +'%d %b %Y')"
 git push
-
+Give execution permission
 chmod +x git_push.sh
-execute 
+Execute whenever required
 ./git_push.sh
 
 ps aux | grep -E "zsh|bash|fish" | grep -v grep | awk '{print $2}' | xargs kill -9
