@@ -32,11 +32,17 @@ def _load_market_data() -> dict:
     return data
 
 
-def _get_market_data() -> dict:
+def _get_market_data(progress_placeholder=None) -> dict:
+    if progress_placeholder is not None:
+        progress_placeholder.progress(0.0, text="Loading market data...")
+
     try:
         return _load_market_data()
     except Exception:
         return {}
+    finally:
+        if progress_placeholder is not None:
+            progress_placeholder.empty()
 
 
 # ----------------------------------------------------------
@@ -86,8 +92,8 @@ def _countdown_text(date_str: str) -> str:
 # ----------------------------------------------------------
 # HEADER SECTION
 # ----------------------------------------------------------
-def handle_header_section():
-    data = _get_market_data()
+def handle_header_section(progress_placeholder=None):
+    data = _get_market_data(progress_placeholder)
 
     # Next NSE holiday
     hol = data.get("next_holiday")

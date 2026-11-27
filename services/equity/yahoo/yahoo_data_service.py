@@ -54,12 +54,18 @@ def fetch_sma_breadth_ratio_range(
     price_table: str,
     indicator_table: str,
     symbol_table: str,
-    latest_date
+    num_dates: int = 30,
 ) -> dict:
+    """Compute breadth for the most recent available daily market dates."""
     try:
-        current_year = datetime.now().year
-        start_date = f"{current_year}-01-01"
         query = f"""
+            WITH recent_dates AS (
+                SELECT DISTINCT date
+                FROM {price_table}
+                WHERE timeframe = '1d'
+                ORDER BY date DESC
+                LIMIT %s
+            )
             SELECT
                 p.date,
                 COUNT(*) AS total,
@@ -76,6 +82,8 @@ def fetch_sma_breadth_ratio_range(
                     WHERE COALESCE(NULLIF(p.adj_close, 0), p.close) > i.sma_200
                 ) AS sma200
             FROM {price_table} p
+            JOIN recent_dates rd
+                ON rd.date = p.date
             JOIN {indicator_table} i
                 ON p.symbol_id = i.symbol_id
                 AND p.timeframe = i.timeframe
@@ -85,11 +93,10 @@ def fetch_sma_breadth_ratio_range(
             WHERE
                 p.timeframe = '1d'
                 AND s.is_active = TRUE
-                AND p.date BETWEEN %s AND %s
             GROUP BY p.date
             ORDER BY p.date DESC
         """
-        cur.execute(query, (start_date, latest_date))
+        cur.execute(query, (num_dates,))
         rows = cur.fetchall()
         if not rows:
             return {}
@@ -305,26 +312,22 @@ def get_market_data() -> Dict:
                 india_symbol = tables_india["symbol"]
                 india_price = tables_india["price"]
                 india_indicator = tables_india["indicator"]
-                india_latest = get_latest_date(cur, india_price, "1d")
                 india_data = fetch_sma_breadth_ratio_range(
                     cur,
                     india_price,
                     india_indicator,
-                    india_symbol,
-                    india_latest
+                    india_symbol
                 )
                 dashboard["india_sma_breadth"] = india_data
                 tables_usa = ASSET_TABLE_CONFIG["yahoo_usa_equity"]
                 usa_symbol = tables_usa["symbol"]
                 usa_price = tables_usa["price"]
                 usa_indicator = tables_usa["indicator"]
-                usa_latest = get_latest_date(cur, usa_price, "1d")
                 usa_data = fetch_sma_breadth_ratio_range(
                     cur,
                     usa_price,
                     usa_indicator,
-                    usa_symbol,
-                    usa_latest
+                    usa_symbol
                 )
                 dashboard["usa_sma_breadth"] = usa_data
                 dashboard["vix_data"] = get_vix_last_n_days_new(cur, 1)
