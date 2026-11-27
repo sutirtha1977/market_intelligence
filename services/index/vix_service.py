@@ -125,7 +125,7 @@ def update_vix_daily_data():
     INSERT INTO nse_vix_features (date, vix)
     SELECT 
         p.date,
-        p.close
+        ROUND(p.close::numeric, 2)
     FROM nse_india_index_price p
     JOIN vix_symbol v
         ON p.symbol_id = v.symbol_id

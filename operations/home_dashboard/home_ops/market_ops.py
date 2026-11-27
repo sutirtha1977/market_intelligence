@@ -1,6 +1,7 @@
 # operations/home_dashboard/home_ops/market_ops.py
 # Header (holiday + VIX) and SMA breadth - all fed by ONE get_market_data() call.
 
+import html
 from datetime import date, datetime
 from typing import Optional
 
@@ -74,6 +75,27 @@ def _parse_vix(raw):
 
 
 # ----------------------------------------------------------
+# NIFTY 50 SRT
+# ----------------------------------------------------------
+def _parse_srt(raw: Optional[dict]):
+    if not isinstance(raw, dict) or raw.get("srt") is None:
+        return None
+    try:
+        value = float(raw["srt"])
+    except (TypeError, ValueError):
+        return None
+
+    d = raw.get("date")
+    as_of = d.strftime("%d %b") if isinstance(d, date) else (str(d) if d else "")
+
+    return {
+        "name": str(raw.get("index_name") or "Nifty 50"),
+        "value": value,
+        "as_of": as_of,
+    }
+
+
+# ----------------------------------------------------------
 # HOLIDAY
 # ----------------------------------------------------------
 def _countdown_text(date_str: str) -> str:
@@ -88,7 +110,7 @@ def _countdown_text(date_str: str) -> str:
 
 
 # ----------------------------------------------------------
-# HEADER SECTION  (one slim strip: VIX | regime | next NSE holiday)
+# HEADER SECTION  (one slim strip: VIX | Nifty 50 SRT | next NSE holiday)
 # ----------------------------------------------------------
 def handle_header_section(progress_placeholder=None):
     data = _get_market_data(progress_placeholder)
@@ -109,6 +131,17 @@ def handle_header_section(progress_placeholder=None):
     else:
         vix_html = '<div class="grp"><span class="lbl">India VIX</span><span class="txt muted">unavailable</span></div>'
 
+    # Nifty 50 SRT group
+    srt = _parse_srt(data.get("nifty50_srt"))
+    if srt:
+        as_of = f'<span class="lbl">as of {srt["as_of"]}</span>' if srt["as_of"] else ""
+        srt_html = (
+            f'<div class="grp"><span class="lbl">{html.escape(srt["name"])} SRT</span>'
+            f'<span class="val">{srt["value"]:.2f}</span>{as_of}</div>'
+        )
+    else:
+        srt_html = '<div class="grp"><span class="lbl">Nifty 50 SRT</span><span class="txt muted">unavailable</span></div>'
+
     # Holiday group
     hol = data.get("next_holiday")
     if hol:
@@ -126,7 +159,7 @@ def handle_header_section(progress_placeholder=None):
         )
 
     st.markdown(
-        f'<div class="card strip">{vix_html}<div class="sep"></div>{hol_html}</div>',
+        f'<div class="card strip">{vix_html}<div class="sep"></div>{srt_html}<div class="sep"></div>{hol_html}</div>',
         unsafe_allow_html=True,
     )
     st.write("")

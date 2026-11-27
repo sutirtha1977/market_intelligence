@@ -303,6 +303,7 @@ def get_equity_dashboard_data(
 # --------------------------------------------------------------------------
 def get_market_data() -> Dict:
     from services.index.vix_service import get_vix_last_n_days_new
+    from services.index.nse_data_service import get_index_srt
 
     dashboard: Dict = {}
     try:
@@ -332,6 +333,7 @@ def get_market_data() -> Dict:
                 dashboard["usa_sma_breadth"] = usa_data
                 dashboard["vix_data"] = get_vix_last_n_days_new(cur, 1)
                 dashboard["next_holiday"] = fetch_next_nse_holiday(cur)
+                dashboard["nifty50_srt"] = get_index_srt("NIFTY 50")
                 # print("\n========== MARKET DASHBOARD DATA ==========")
                 # pprint(dashboard, sort_dicts=False, width=120)
                 # print("============================================\n")

@@ -14,7 +14,7 @@ from config.constants import (
     NSE_IDX_HEADERS,
     NSE_IDX_CONS_HEADERS,
 )
-from config.db_table import ASSET_TABLE_CONFIG
+from config.db_config import ASSET_TABLE_CONFIG
 from config.paths import NSE_DIR
 from config.logger import log
 from services.equity.cleanup_service import delete_files_in_folder
@@ -341,7 +341,7 @@ def update_nse_index_srt():
                             VALUES (%s, %s, %s, %s)
                             ON CONFLICT (index_id, timeframe, date)
                             DO UPDATE SET srt = EXCLUDED.srt
-                        """, (index_id, TIMEFRAME, row["date"], round(row["srt"], 4)))
+                        """, (index_id, TIMEFRAME, row["date"], round(row["srt"], 2)))
                         upserted += 1
                     log(f"{index_name}: SRT updated for {upserted} dates")
         log("✅ NSE Index SRT update completed")
@@ -468,4 +468,58 @@ def update_weekly_monthly_for_all_symbols(asset_type: str):
     update_pct_price_change(price_table)
 
     log("PIPELINE COMPLETED")
+# --------------------------------------------------------------------------
+def get_index_srt(index_name, timeframe=TIMEFRAME):
+    """
+    Retrieve the latest SRT value for the specified index.
+
+    Args:
+        index_name: Index name from nse_india_index_symbols.
+        timeframe: Data timeframe (default: 1d).
+
+    Returns:
+        Dictionary containing index name, date and SRT.
+    """
+
+    try:
+        tables = ASSET_TABLE_CONFIG["nse_india_index"]
+
+        symbols_table = tables["symbol"]
+        srt_table = tables["srt"]
+
+        with get_db_connection_cm() as conn:
+            with conn.cursor() as cur:
+
+                cur.execute(
+                    f"""
+                    SELECT
+                        s.name AS index_name,
+                        srt.date,
+                        srt.srt
+                    FROM {srt_table} srt
+                    JOIN {symbols_table} s
+                        ON s.symbol_id = srt.index_id
+                    WHERE UPPER(TRIM(s.name)) = UPPER(TRIM(%s))
+                      AND srt.timeframe = %s
+                    ORDER BY srt.date DESC
+                    LIMIT 1
+                    """,
+                    (index_name, timeframe)
+                )
+
+                row = cur.fetchone()
+
+                if not row:
+                    log(f"No SRT data found for index: {index_name}")
+                    return None
+
+                return {
+                    "index_name": row[0],
+                    "date": row[1],
+                    "srt": row[2]
+                }
+
+    except Exception as e:
+        log(f"❌ Error fetching SRT for {index_name}: {e}")
+        return None
 # --------------------------------------------------------------------------
