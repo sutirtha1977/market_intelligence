@@ -65,7 +65,8 @@ def display_logic(df: pd.DataFrame) -> pd.DataFrame:
         "rsi_3_monthly": "Monthly RSI",
         "close_1w_ago": "Prev Week Close",
         "sma_20_2w_ago": "SMA 20 (2W Ago)",
-        "min_low_4w_ago": "4W Low"
+        "min_low_4w_ago": "4W Low",
+        "associated_indices": "Index Map"
     }
 
     df.rename(columns=rename_map, inplace=True)
