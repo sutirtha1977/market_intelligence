@@ -12,15 +12,15 @@ from core.widgets import (
 
 # IMPORTANT: delay imports (lazy loading)
 def load_yahoo():
-    from operations.admin_operations.yahoo_view import handle_yahoo_operations
+    from operations.admin_operations.yahoo_ops import handle_yahoo_operations
     handle_yahoo_operations()
 
 def load_nse():
-    from operations.admin_operations.nse_view import handle_nse_operations
+    from operations.admin_operations.nse_ops import handle_nse_operations
     handle_nse_operations()
 
 def load_database():
-    from operations.admin_operations.database_view import handle_database_operations
+    from operations.admin_operations.database_ops import handle_database_operations
     handle_database_operations()
 
 
