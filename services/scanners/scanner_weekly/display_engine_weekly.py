@@ -77,6 +77,7 @@ def display_logic(df: pd.DataFrame) -> pd.DataFrame:
     preferred_order = [
         "ID",
         "Symbol",
+        "Index Map",
         "Date",
         "Week High",
         "Week Low",

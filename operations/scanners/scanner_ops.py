@@ -370,15 +370,7 @@ def render_scanner(scanner: Scanner) -> None:
     )
 
     with params_col, st.container(border=True):
-
-        values = {
-            param.key: param.build(
-                param.label,
-                f"{scanner.key}_{param.key}",
-            )
-            for param in scanner.params
-        }
-
+        
         if scanner.conditions:
             with st.expander("Scanner conditions"):
                 st.markdown(
@@ -387,6 +379,15 @@ def render_scanner(scanner: Scanner) -> None:
                         for condition in scanner.conditions
                     )
                 )
+                
+        values = {
+            param.key: param.build(
+                param.label,
+                f"{scanner.key}_{param.key}",
+            )
+            for param in scanner.params
+        }
+
 
         def task():
             st.session_state[scanner.results_key] = scanner.run(
