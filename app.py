@@ -459,7 +459,6 @@ def render_section_header(
     safe_title = escape(str(title))
     safe_subtitle = escape(str(subtitle)) if subtitle else ""
     safe_icon = _icon_html(icon)
-    # today = datetime.now().strftime("%d %b %Y")
     now = datetime.now().astimezone()
     ist_now = now.astimezone(ZoneInfo("Asia/Kolkata"))
 
