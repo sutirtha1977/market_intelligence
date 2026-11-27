@@ -1,0 +1,48 @@
+symbol_id,symbol,associated_indices,signal_date,signal_week_high,signal_week_low,signal_week_close,sma_20,rsi_3,rsi_9,ema_rsi_9_3,wma_rsi_9_21,rsi_3_monthly,close_1w_ago,sma_20_2w_ago,min_low_4w_ago
+51,ADANIENSOL,"Nifty 100, Nifty 200, Nifty 500, Nifty Commodities, Nifty Energy, Nifty India FPI 150, Nifty India Infrastructure & Logistics, Nifty LargeMidcap 250, Nifty Next 50, Nifty Total Market",2021-01-18,486.0,397.15,477.2,354.72,79.39,79.07,78.29,76.11,94.14,432.85,336.27,428.0
+86,AGI,,2021-01-18,137.9,110.3,126.59,89.51,83.32,80.77,78.94,77.63,97.6,108.89,83.43,114.0
+519,COROMANDEL,"Nifty 500, Nifty Chemicals, Nifty Conglomerate 50, Nifty India Manufacturing, Nifty LargeMidcap 250, Nifty MidSmallcap 400, Nifty Rural, Nifty Total Market",2021-01-25,851.5,803.25,798.14,741.76,91.23,67.48,65.54,58.72,77.36,787.18,732.98,806.2
+652,DYNPRO,,2021-01-25,275.7,244.84,266.34,244.39,66.14,63.11,61.98,61.68,79.52,251.65,238.21,249.47
+1798,PRAJIND,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-02-01,136.0,113.05,126.06,90.49,81.24,76.79,73.8,72.5,98.7,118.24,80.68,117.1
+1813,PRESTIGE,"Nifty 200, Nifty 500, Nifty Core Housing, Nifty India FPI 150, Nifty India Infrastructure & Logistics, Nifty India New Age Consumption, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap 50, Nifty MidSmallcap 400, Nifty Realty, Nifty Total Market",2021-02-22,311.85,280.0,294.37,271.28,80.34,65.47,63.53,60.71,91.51,293.82,267.16,280.05
+233,ASTRAMICRO,"Nifty India Defence, Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-03-01,155.7,112.05,146.9,116.36,85.24,72.62,58.11,56.19,72.48,118.07,114.48,113.8
+368,BIRLACORPN,"Nifty Cement, Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-03-22,924.0,790.1,867.56,744.34,71.34,67.17,64.0,63.19,96.57,825.79,715.23,825.0
+1178,JSWDULUX,,2021-03-29,237.8,219.6,195.77,185.08,78.18,61.52,56.54,56.14,65.59,182.28,176.8,221.32
+1704,PANACEABIO,,2021-04-05,250.8,183.8,233.45,210.44,87.61,66.14,53.87,51.13,85.7,196.15,206.39,189.0
+771,FORTIS,"Nifty 200, Nifty 500, Nifty India Consumption, Nifty India FPI 150, Nifty Infrastructure, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap 50, Nifty MidSmallcap 400, Nifty Total Market, Nifty500 Healthcare",2021-04-19,217.5,198.95,206.28,174.43,79.18,76.12,76.07,69.18,94.26,202.16,168.55,199.25
+2309,TASTYBITE,,2021-04-19,15994.7,13912.15,15537.79,13340.43,74.07,66.86,63.74,63.68,80.83,14261.61,12977.91,13952.5
+2071,SHALPAINTS,,2021-05-17,109.7,92.2,101.7,94.94,83.17,64.34,56.78,54.88,83.06,98.05,80.96,93.0
+2057,SFL,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-05-31,1142.43,984.28,1074.45,1017.95,86.18,66.9,63.11,61.71,85.86,1049.48,1010.36,987.97
+116,ALEMBICLTD,,2021-06-14,139.5,120.0,119.16,100.11,73.54,70.71,69.72,65.71,80.94,117.56,96.79,120.65
+2078,SHARDAMOTR,,2021-06-14,455.9,392.05,406.04,385.95,80.24,62.28,59.31,54.4,80.74,386.26,382.76,392.5
+213,ASHAPURMIN,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-06-21,170.7,145.3,156.63,129.94,86.78,72.63,71.23,65.74,86.6,154.51,125.81,146.0
+2440,ULTRACEMCO,"Nifty 100, Nifty 200, Nifty 50, Nifty 500, Nifty Cement, Nifty Commodities, Nifty Conglomerate 50, Nifty Core Housing, Nifty Housing, Nifty India FPI 150, Nifty India Infrastructure & Logistics, Nifty Infrastructure, Nifty LargeMidcap 250, Nifty Rural, Nifty Total Market",2021-06-21,7000.0,6522.2,6601.25,6264.34,89.46,67.35,63.89,62.72,78.86,6382.8,6171.97,6525.15
+2580,WELINV,,2021-06-21,482.6,354.0,482.6,393.98,91.2,76.1,66.26,60.31,95.51,397.4,385.84,385.2
+1298,KSCL,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-06-28,775.0,693.3,733.46,591.76,73.26,70.19,67.97,67.6,92.39,676.3,539.55,702.25
+277,BAFNAPH,,2021-07-12,163.35,133.0,163.35,141.03,89.24,66.13,58.79,52.77,81.5,139.2,138.83,134.6
+2407,TRIGYN,,2021-07-12,152.4,117.55,148.95,95.09,87.56,79.53,76.03,69.67,94.53,127.8,88.28,119.8
+1186,JUBLFOOD,"Nifty 200, Nifty 500, Nifty India New Age Consumption, Nifty India Tourism, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty MidSmallcap 400, Nifty Total Market",2021-07-19,727.71,604.61,704.73,597.93,90.12,75.94,67.66,61.77,93.1,613.79,589.99,614.0
+2316,TATAPOWER,"Nifty 100, Nifty 200, Nifty 500, Nifty Commodities, Nifty Energy, Nifty Housing, Nifty India Consumption, Nifty India FPI 150, Nifty India Infrastructure & Logistics, Nifty Infrastructure, Nifty LargeMidcap 250, Nifty Next 50, Nifty Rural, Nifty Services Sector, Nifty Total Market",2021-07-26,126.65,118.4,120.83,106.33,76.84,75.29,75.04,71.13,94.0,118.8,104.88,120.6
+351,BHARATFORG,"Nifty 200, Nifty 500, Nifty Auto, Nifty EV & New Age Automotive, Nifty India Defence, Nifty India FPI 150, Nifty India Manufacturing, Nifty Infrastructure, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap 50, Nifty Midcap Select, Nifty MidSmallcap 400, Nifty Mobility, Nifty Total Market, Nifty Transportation & Logistics",2021-08-09,844.8,746.0,790.61,679.96,79.83,74.8,72.37,71.79,91.59,751.93,659.95,766.95
+966,HIKAL,,2021-08-09,710.0,501.0,681.91,402.51,98.55,94.57,92.49,89.02,98.42,602.79,352.62,512.0
+1050,INDIAGLYCO,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-08-09,382.5,325.73,346.08,269.62,78.86,75.69,74.8,70.56,92.3,337.4,256.37,338.7
+1765,PKTEA,,2021-08-09,344.3,290.0,337.77,262.61,70.55,69.6,68.37,67.62,67.76,310.75,252.79,301.55
+2309,TASTYBITE,,2021-08-09,19870.0,16500.0,18914.85,16424.13,70.08,66.31,64.75,63.01,82.98,17849.74,15990.24,17502.65
+2553,VOLTAMP,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2021-08-09,1642.75,1415.05,1494.73,1221.32,82.49,76.28,75.5,68.62,63.03,1486.02,1169.17,1486.0
+196,ARMANFIN,,2021-08-23,737.0,627.8,724.4,632.67,72.63,65.38,61.09,58.78,69.76,718.8,618.0,678.5
+523,CPCAP,,2021-08-23,161.0,138.0,154.1,137.38,59.53,56.34,54.26,53.35,69.05,148.31,134.92,139.55
+2005,SANOFI,,2021-08-23,9035.0,7056.55,6862.42,6215.48,82.91,76.79,75.44,63.42,91.7,6739.98,6042.25,7803.0
+2440,ULTRACEMCO,"Nifty 100, Nifty 200, Nifty 50, Nifty 500, Nifty Cement, Nifty Commodities, Nifty Conglomerate 50, Nifty Core Housing, Nifty Housing, Nifty India FPI 150, Nifty India Infrastructure & Logistics, Nifty Infrastructure, Nifty LargeMidcap 250, Nifty Rural, Nifty Total Market",2021-08-23,7594.8,7288.0,7249.19,6595.99,78.21,72.92,72.31,67.23,92.55,7179.96,6528.88,7298.05
+411,BRIGADE,"Nifty 500, Nifty Core Housing, Nifty India Infrastructure & Logistics, Nifty India New Age Consumption, Nifty MidSmallcap 400, Nifty Realty, Nifty Smallcap 100, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2021-08-30,288.75,227.25,273.71,215.95,79.43,70.37,63.53,62.17,88.53,243.28,206.2,231.64
+2311,TATACHEM,"Nifty 500, Nifty Chemicals, Nifty EV & New Age Automotive, Nifty MidSmallcap 400, Nifty Smallcap 100, Nifty Smallcap 250, Nifty Smallcap 50, Nifty Smallcap 500, Nifty Total Market",2021-09-20,901.7,780.05,823.58,725.83,82.7,69.97,66.67,63.6,91.15,785.93,712.92,813.25
+652,DYNPRO,,2021-09-27,640.52,508.94,636.47,527.67,85.78,71.92,63.42,61.55,59.19,530.4,519.05,519.54
+813,GESHIP,"Nifty 500, Nifty India Infrastructure & Logistics, Nifty MidSmallcap 400, Nifty Smallcap 100, Nifty Smallcap 250, Nifty Smallcap 50, Nifty Smallcap 500, Nifty Total Market",2021-09-27,375.7,351.1,302.89,299.45,63.46,56.76,56.24,52.84,64.59,299.5,274.33,351.2
+2510,VHLTD,,2021-10-11,420.0,350.0,420.0,351.25,95.52,71.15,64.3,54.98,72.33,375.0,274.75,355.0
+86,AGI,,2021-10-18,264.0,214.25,240.7,224.01,87.03,66.47,59.86,57.84,68.03,217.16,222.91,219.0
+1033,IIFL,"Nifty 500, Nifty MidSmallcap 400, Nifty Smallcap 100, Nifty Smallcap 250, Nifty Smallcap 50, Nifty Smallcap 500, Nifty Total Market",2021-10-18,307.0,278.0,287.59,271.43,76.6,61.1,59.66,58.07,83.0,285.46,268.01,281.5
+2244,SUNDROP,,2021-10-18,1072.0,972.0,1033.08,983.57,92.31,74.89,73.15,68.4,55.2,1028.92,976.93,992.0
+209,ASAHIINDIA,"Nifty 500, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2021-10-25,439.95,345.25,423.26,356.48,86.6,72.52,63.23,59.37,87.97,352.06,350.48,354.0
+1483,MINDACORP,"Nifty 500, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2021-11-22,174.0,154.2,166.51,137.79,71.87,68.89,68.37,61.25,85.86,160.96,133.84,159.05
+1682,ORIENTELEC,,2021-11-29,408.0,333.95,362.17,331.13,62.63,61.28,60.57,59.62,95.96,346.95,326.5,346.0
+2153,SMARTLINK,,2021-12-20,143.1,105.95,141.51,112.52,86.27,71.76,60.05,53.13,90.86,122.23,94.44,108.6
+1284,KREBSBIO,,2021-12-27,227.9,158.05,201.35,167.27,86.06,71.69,61.66,60.66,86.41,159.75,163.07,158.5

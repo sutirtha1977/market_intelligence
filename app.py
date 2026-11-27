@@ -679,7 +679,7 @@ def render_content_box(menu):
             "Automated trading signal detection",
             "search"
         )
-        from operations.scanners.scanner_ops import handle_scanner_backtest_operations
+        from operations.ops_scanners.scanner_ops import handle_scanner_backtest_operations
         handle_scanner_backtest_operations()
 
     # elif menu == "playground":
@@ -697,7 +697,7 @@ def render_content_box(menu):
             "Configuration and system management",
             "gear-fill"
         )
-        from operations.admin_operations.admin_ops import handle_admin_operations
+        from operations.ops_admin.admin_ops import handle_admin_operations
         handle_admin_operations()
 
     else:

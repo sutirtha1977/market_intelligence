@@ -1,0 +1,29 @@
+symbol_id,symbol,associated_indices,signal_date,signal_week_high,signal_week_low,signal_week_close,sma_20,rsi_3,rsi_9,ema_rsi_9_3,wma_rsi_9_21,rsi_3_monthly,close_1w_ago,sma_20_2w_ago,min_low_4w_ago
+365,BIOCON,"Nifty 200, Nifty 500, Nifty India FPI 150, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty MidSmallcap 400, Nifty Pharma, Nifty Total Market, Nifty500 Healthcare",2018-01-15,287.5,262.62,280.45,213.26,96.22,85.99,84.32,73.09,95.34,266.19,202.61,266.15
+2297,TAJGVK,,2018-01-15,200.8,171.6,182.24,166.64,84.12,66.28,63.04,57.38,55.34,175.41,163.81,176.15
+2389,TORNTPOWER,"Nifty 500, Nifty Commodities, Nifty Energy, Nifty Housing, Nifty India Infrastructure & Logistics, Nifty LargeMidcap 250, Nifty MidSmallcap 400, Nifty Rural, Nifty Total Market",2018-01-15,305.3,274.1,244.92,208.64,89.37,79.05,76.38,73.32,88.14,238.24,201.51,275.7
+930,HAVELLS,"Nifty 200, Nifty 500, Nifty Consumer Durables, Nifty Core Housing, Nifty Housing, Nifty India FPI 150, Nifty India Manufacturing, Nifty India New Age Consumption, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap 50, Nifty MidSmallcap 400, Nifty Non-Cyclical Consumer, Nifty Rural, Nifty Total Market",2018-01-22,590.5,538.7,547.43,497.23,80.03,68.21,64.35,60.79,54.91,517.77,487.09,545.0
+681,ELGIEQUIP,"Nifty 500, Nifty India Infrastructure & Logistics, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2018-01-29,167.5,141.7,151.05,127.22,84.09,79.12,77.29,73.49,92.67,144.83,123.52,143.75
+681,ELGIEQUIP,"Nifty 500, Nifty India Infrastructure & Logistics, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2018-02-05,171.25,133.8,161.41,129.98,93.73,84.68,80.99,75.09,90.9,151.05,125.25,141.7
+731,EXCELINDUS,,2018-02-05,966.0,652.3,802.53,536.73,89.94,84.72,79.68,76.45,93.66,616.44,503.24,677.0
+1182,JSWSTEEL,"Nifty 100, Nifty 200, Nifty 50, Nifty 500, Nifty Commodities, Nifty Conglomerate 50, Nifty Housing, Nifty India FPI 150, Nifty India Manufacturing, Nifty LargeMidcap 250, Nifty Metal, Nifty Total Market",2018-02-05,311.85,265.6,280.76,244.62,93.07,80.3,77.09,67.73,95.88,271.37,240.36,273.05
+2561,VSTTILLERS,,2018-02-05,2675.0,2160.0,2371.7,2099.11,71.19,66.37,63.04,62.29,75.18,2183.77,2053.31,2340.95
+365,BIOCON,"Nifty 200, Nifty 500, Nifty India FPI 150, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty MidSmallcap 400, Nifty Pharma, Nifty Total Market, Nifty500 Healthcare",2018-02-19,319.92,276.6,309.47,245.75,92.79,87.15,86.09,80.73,95.8,298.95,232.15,279.55
+949,HEALTHX,,2018-04-02,129.0,108.55,124.5,116.08,90.38,66.74,55.56,49.35,58.46,118.95,107.12,114.5
+421,BSOFT,"Nifty 500, Nifty India Digital, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2018-04-16,153.14,133.62,130.11,110.1,86.65,73.53,70.09,69.55,99.16,122.86,106.45,133.65
+1913,RHIM,"Nifty 500, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2018-05-14,185.9,151.0,168.55,154.73,86.13,67.39,56.61,51.58,84.28,152.98,154.55,157.0
+1754,PIDILITIND,"Nifty 100, Nifty 200, Nifty 500, Nifty Chemicals, Nifty Commodities, Nifty India FPI 150, Nifty India Manufacturing, Nifty LargeMidcap 250, Nifty Next 50, Nifty Total Market",2018-05-21,573.65,520.75,544.08,459.55,85.37,81.75,80.57,71.06,98.2,516.32,449.8,529.15
+1834,PUNJABCHEM,,2018-05-21,524.0,460.85,505.05,440.97,64.24,63.23,63.1,56.22,71.87,493.62,437.85,472.4
+2241,SUNDARMFIN,"Nifty 500, Nifty LargeMidcap 250, Nifty MidSmallcap 400, Nifty Rural, Nifty Total Market",2018-05-21,1856.0,1686.0,1621.08,1553.1,66.74,64.58,64.26,63.17,86.48,1604.5,1533.27,1687.0
+2528,VIPIND,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2018-05-21,428.0,365.1,411.81,350.76,78.62,70.7,67.61,62.03,86.76,377.35,345.19,385.05
+1492,MMFL,,2018-06-04,308.5,261.3,280.03,251.67,81.97,67.94,63.02,58.62,89.74,257.79,250.94,270.62
+2546,VMART,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2018-06-04,614.65,473.75,596.24,486.87,84.34,75.69,73.9,71.08,99.29,571.43,469.25,502.5
+119,ALICON,,2018-07-23,630.0,568.0,590.33,575.28,66.75,54.49,49.48,48.83,53.95,547.88,575.02,572.25
+857,GODREJIND,"Nifty 500, Nifty Conglomerate 50, Nifty LargeMidcap 250, Nifty MidSmallcap 400, Nifty Total Market",2018-07-23,650.25,584.4,634.26,582.58,79.43,64.86,58.19,55.26,85.07,588.65,571.51,587.65
+1052,INDIANB,"Nifty 200, Nifty 500, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap Select, Nifty MidSmallcap 400, Nifty PSU Bank, Nifty Rural, Nifty Total Market",2018-07-23,356.45,305.05,302.53,274.02,67.53,58.95,53.7,52.3,74.83,265.63,270.68,306.45
+2243,SUNDRMFAST,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2018-07-30,683.8,612.35,619.5,567.04,73.6,67.14,64.33,62.6,84.06,584.9,561.19,624.55
+2311,TATACHEM,"Nifty 500, Nifty Chemicals, Nifty EV & New Age Automotive, Nifty MidSmallcap 400, Nifty Smallcap 100, Nifty Smallcap 250, Nifty Smallcap 50, Nifty Smallcap 500, Nifty Total Market",2018-08-13,314.69,285.81,264.29,253.87,75.64,62.87,57.88,52.99,79.53,258.78,250.32,289.23
+729,EVERESTIND,,2018-12-10,524.6,452.05,485.25,475.3,84.67,58.83,52.17,50.51,59.45,441.22,451.11,465.45
+1879,RATNAMANI,"Nifty Microcap 250, Nifty Smallcap 500, Nifty Total Market",2018-12-10,603.67,561.93,566.54,549.86,68.15,56.67,54.58,45.9,70.61,554.55,547.74,568.27
+1655,OLECTRA,"Nifty 500, Nifty EV & New Age Automotive, Nifty MidSmallcap 400, Nifty Smallcap 250, Nifty Smallcap 500, Nifty Total Market",2018-12-24,259.0,188.15,244.47,222.78,77.93,61.21,54.24,53.61,78.07,229.85,204.56,196.0
+2453,UNITDSPR,"Nifty 200, Nifty 500, Nifty FMCG, Nifty India Consumption, Nifty India FPI 150, Nifty LargeMidcap 250, Nifty Midcap 100, Nifty Midcap 50, Nifty MidSmallcap 400, Nifty MNC, Nifty Non-Cyclical Consumer, Nifty Total Market",2018-12-24,640.0,588.6,620.57,577.73,59.91,56.72,55.82,50.2,54.86,604.35,575.76,606.25
