@@ -616,8 +616,8 @@ def render_content_box(menu):
             "Real-time market insights and performance analytics",
             "graph-up-arrow"
         )
-        # from operations.main_dashboard.home_view import handle_home_operations
-        # handle_home_operations()
+        from operations.home_dashboard.home_view import handle_home_operations
+        handle_home_operations()
 
     # elif menu == "global_overview":
     #     render_section_header(
