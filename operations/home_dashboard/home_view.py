@@ -9,15 +9,15 @@ def load_styles():
     inject_home_styles()
 
 def load_header():
-    from operations.home_dashboard.home_ops.pulse_ops import handle_header_section
+    from operations.home_dashboard.home_ops.market_ops import handle_header_section
     handle_header_section()
 
 def load_indices():
-    from operations.home_dashboard.home_ops.pulse_ops import handle_index_section
+    from operations.home_dashboard.home_ops.market_ops import handle_index_section
     handle_index_section()
 
 def load_breadth():
-    from operations.home_dashboard.home_ops.breadth_ops import handle_breadth_section
+    from operations.home_dashboard.home_ops.market_ops import handle_breadth_section
     handle_breadth_section()
 
 def load_news():

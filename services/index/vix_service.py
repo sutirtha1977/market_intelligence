@@ -148,4 +148,84 @@ def update_vix_daily_data():
         log(f"❌ VIX UPDATE FAILED: {e}")
         raise
 # --------------------------------------------------------------------------
+def get_vix_last_n_days(n_days: int = 10) -> pd.DataFrame:
+
+    log(f"Fetching last {n_days} days of VIX data")
+
+    try:
+        engine = get_engine()
+
+        query = f"""
+            SELECT 
+                date,
+                vix,
+                vix_ma_5,
+                vix_ma_10,
+                vix_change,
+                vix_percentile,
+                vix_regime,
+                vix_signal
+            FROM nse_vix_features
+            ORDER BY date DESC
+            LIMIT {n_days}
+        """
+
+        df = pd.read_sql(query, engine)
+
+        if df.empty:
+            log("No VIX data found")
+            return df
+
+        # Optional: sort ascending for charts
+        df = df.sort_values("date")
+
+        log(f"Fetched {len(df)} rows")
+
+        return df
+
+    except Exception as e:
+        log(f"❌ FAILED to fetch VIX data: {e}")
+        raise
+# --------------------------------------------------------------------------
+def get_vix_last_n_days_new(cur, n_days: int = 10) -> pd.DataFrame:
+
+    log(f"Fetching last {n_days} days of VIX data")
+
+    try:
+        query = """
+            SELECT 
+                date,
+                vix,
+                vix_ma_5,
+                vix_ma_10,
+                vix_change,
+                vix_percentile,
+                vix_regime,
+                vix_signal
+            FROM nse_vix_features
+            ORDER BY date DESC
+            LIMIT %s
+        """
+
+        cur.execute(query, (n_days,))
+        rows = cur.fetchall()
+
+        if not rows:
+            log("No VIX data found")
+            return pd.DataFrame()
+
+        # Convert to DataFrame
+        columns = [desc[0] for desc in cur.description]
+        df = pd.DataFrame(rows, columns=columns)
+
+        # Optional: sort ascending for charts
+        df = df.sort_values("date")
+
+        log(f"Fetched {len(df)} rows")
+
+        return df
+
+    except Exception as e:
+        log(f"❌ FAILED to fetch VIX data: {e}")
+        raise
 # --------------------------------------------------------------------------

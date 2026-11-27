@@ -64,17 +64,3 @@ def get_breadth(market: str, days: int = 30):
         series[name] = vals
 
     return {"flag": cfg["flag"], "latest": cfg["latest"], "series": series}
-
-
-def get_news():
-    return [
-        ("Blackstone sells 1.55% stake in IGI for Rs 280 crore to meet public shareholding norms", "Fri, 27 Nov 2026 22:03:18 +0530"),
-        ("Capital market industry hopes for relief in capital gains taxation in Budget 2027-28: Axis Capital MD", "Fri, 27 Nov 2026 18:56:12 +0530"),
-        ("Dow jumps 600 points, heads for weekly gains after volatile trading: Stock Market Live Updates", "Fri, 27 Nov 2026 18:16:59 +0530"),
-        ("India bonds slump as oil spike adds to RBI hike bets", "Fri, 27 Nov 2026 17:24:01 +0530"),
-        ("Ion Exchange India among 6 stocks hitting 52-week low; shares slipped up to 20% in a month", "Fri, 27 Nov 2026 16:31:59 +0530"),
-        ("Eurozone bond yields rise as investors return to riskier assets, oil prices rebound", "Fri, 27 Nov 2026 15:56:25 +0530"),
-        ("Rupee rally takes a hit as AI trade revival dents shares, currency sees weekly dip", "Fri, 27 Nov 2026 15:53:05 +0530"),
-        ("Sensex, Nifty end flat as banks offset IT weakness", "Fri, 27 Nov 2026 15:41:10 +0530"),
-        ("FIIs turn net buyers in cash segment after four sessions", "Fri, 27 Nov 2026 14:12:44 +0530"),
-    ]

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 from database.connection import get_db_connection_cm, get_engine
 from config.db_config import ASSET_TABLE_CONFIG
 import pandas as pd
+from pprint import pprint
 
 # --------------------------------------------------------------------------
 def get_latest_date(cur, price_table: str, timeframe: str):
@@ -25,7 +26,7 @@ def get_latest_date(cur, price_table: str, timeframe: str):
 # --------------------------------------------------------------------------
 def fetch_next_nse_holiday(cur) -> Optional[Dict]:
     try:
-        holidays_table = ASSET_TABLE_CONFIG["reference"]["holidays_nse"]
+        holidays_table = ASSET_TABLE_CONFIG["reference"]["nse_holidays"]
         cur.execute(
             f"""
             SELECT holiday_date, day_name, holiday_name
@@ -295,7 +296,7 @@ def get_equity_dashboard_data(
 # --------------------------------------------------------------------------
 def get_market_data() -> Dict:
     from services.index.vix_service import get_vix_last_n_days_new
-    from services.derivatives.pcr_service import get_latest_pcr_data
+
     dashboard: Dict = {}
     try:
         with get_db_connection_cm() as conn:
@@ -327,8 +328,10 @@ def get_market_data() -> Dict:
                 )
                 dashboard["usa_sma_breadth"] = usa_data
                 dashboard["vix_data"] = get_vix_last_n_days_new(cur, 1)
-                dashboard["pcr_data"] = get_latest_pcr_data(cur, asset_type="index")
                 dashboard["next_holiday"] = fetch_next_nse_holiday(cur)
+                # print("\n========== MARKET DASHBOARD DATA ==========")
+                # pprint(dashboard, sort_dicts=False, width=120)
+                # print("============================================\n")
                 return dashboard
     except Exception as e:
         log(f"❌ Error fetching market data: {e}")

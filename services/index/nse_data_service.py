@@ -5,7 +5,6 @@ import pandas as pd
 from datetime import date, timedelta
 import json
 import re
-from typing import Callable, Optional
 from tqdm import tqdm
 
 from config.constants import (
@@ -15,7 +14,7 @@ from config.constants import (
     NSE_IDX_HEADERS,
     NSE_IDX_CONS_HEADERS,
 )
-from config.db_config import ASSET_TABLE_CONFIG
+from config.db_table import ASSET_TABLE_CONFIG
 from config.paths import NSE_DIR
 from config.logger import log
 from services.equity.cleanup_service import delete_files_in_folder
@@ -27,8 +26,6 @@ FALLBACK_START_DATE = date(2018, 1, 1)
 START_DATE = "01-Jan-2000"
 END_DATE = "31-Dec-2017"
 SMA_PERIOD = 124
-
-
 # --------------------------------------------------------------------------
 def upsert_nifty_index_constituents():
     log("Starting NSE Index Constituents Update")
@@ -129,44 +126,14 @@ def upsert_nse_index_history():
                         }
                         r = session.post(NSE_IDX_API_URL, headers=NSE_IDX_HEADERS, json=payload, timeout=30)
                         r.raise_for_status()
-                        
-                        # outer = r.json()
-                        # raw = outer.get("d", "")
-
-                        # if not raw:
-                        #     log(f"No data returned for {symbol}, skipping")
-                        #     continue
-                        # raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
-                        # records = json.loads(raw_fixed)
                         outer = r.json()
+                        raw = outer.get("d", "")
 
-                        if isinstance(outer, dict):
-                            raw = outer.get("d", "")
-                            if not raw:
-                                log(f"No data returned for {symbol}, skipping")
-                                continue
-
-                            if isinstance(raw, str):
-                                raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
-                                records = json.loads(raw_fixed)
-                            elif isinstance(raw, list):
-                                records = raw
-                            else:
-                                log(f"Unexpected 'd' data type for {symbol}: {type(raw).__name__}")
-                                continue
-
-                        elif isinstance(outer, list):
-                            records = outer
-
-                        else:
-                            log(f"Unexpected API response type for {symbol}: {type(outer).__name__}")
+                        if not raw:
+                            log(f"No data returned for {symbol}, skipping")
                             continue
-
-                        if not records:
-                            log(f"No records returned for {symbol}, skipping")
-                            continue
-
-                        df = pd.DataFrame(records)
+                        raw_fixed = re.sub(r"}\s*{", "},{", raw.replace("\t", ","))
+                        records = json.loads(raw_fixed)
                         df = pd.DataFrame(records)
                         if "HistoricalDate" not in df.columns:
                             log(f"{symbol} missing HistoricalDate column, skipping")
@@ -215,7 +182,6 @@ def upsert_nse_index_history():
     except Exception as e:
         log(f"❌ General error in NSE index history upsert: {e}")
     log("✅ NSE historical index upsert completed (check error logs for issues)")
-
 # --------------------------------------------------------------------------
 def upsert_nse_index_incremental():
     log("Starting NSE Index Price Data Update")
@@ -383,10 +349,7 @@ def update_nse_index_srt():
         log(f"❌ Error updating SRT: {e}")
         raise
 # --------------------------------------------------------------------------
-def upsert_weekly_monthly_ohlc(
-    price_table: str,
-    progress_callback: Optional[Callable[[str, int, int], None]] = None,
-):
+def upsert_weekly_monthly_ohlc(price_table: str):
     try:
         log(f"START OHLC UPSERT | table={price_table}")
         engine = get_engine()
@@ -395,16 +358,7 @@ def upsert_weekly_monthly_ohlc(
                 f"SELECT DISTINCT symbol_id FROM {price_table} WHERE timeframe='1d'", engine
             )["symbol_id"].tolist()
             log(f"TOTAL SYMBOLS: {len(symbol_ids)}")
-            total_symbols = len(symbol_ids)
-            if progress_callback:
-                progress_callback("symbols", 0, total_symbols)
-
-            for completed_symbols, symbol_id in enumerate(tqdm(
-                symbol_ids,
-                desc="Symbols",
-                ncols=100,
-                disable=progress_callback is not None,
-            ), start=1):
+            for symbol_id in tqdm(symbol_ids, desc="Symbols", ncols=100):
                 df = pd.read_sql(
                     f"""
                     SELECT date, open, high, low, close, volume
@@ -417,8 +371,6 @@ def upsert_weekly_monthly_ohlc(
                 )
                 if df.empty:
                     log(f"SKIP SYMBOL {symbol_id} (no data)")
-                    if progress_callback:
-                        progress_callback("symbols", completed_symbols, total_symbols)
                     continue
                 df["date"] = pd.to_datetime(df["date"])
                 df["volume"] = df["volume"].fillna(0)
@@ -461,8 +413,6 @@ def upsert_weekly_monthly_ohlc(
                             log(f"UPSERT ERROR | symbol={symbol_id} date={r['date']}")
                             log(traceback.format_exc())
                     conn.commit()
-                if progress_callback:
-                    progress_callback("symbols", completed_symbols, total_symbols)
         log("✅ OHLC UPSERT COMPLETED")
     except Exception:
         log("❌ OHLC UPSERT FAILED")
@@ -510,19 +460,12 @@ def update_pct_price_change(price_table: str):
         log("❌ pct_price_change UPDATE FAILED")
         log(traceback.format_exc())
 # --------------------------------------------------------------------------
-def update_weekly_monthly_for_all_symbols(
-    asset_type: str,
-    progress_callback: Optional[Callable[[str, int, int], None]] = None,
-):
+def update_weekly_monthly_for_all_symbols(asset_type: str):
     log("START FULL PIPELINE")
     tables = ASSET_TABLE_CONFIG[asset_type]
     price_table = tables["price"]
-    upsert_weekly_monthly_ohlc(price_table, progress_callback=progress_callback)
-    if progress_callback:
-        progress_callback("price-change update", 0, 1)
+    upsert_weekly_monthly_ohlc(price_table)
     update_pct_price_change(price_table)
-    if progress_callback:
-        progress_callback("price-change update", 1, 1)
 
     log("PIPELINE COMPLETED")
 # --------------------------------------------------------------------------

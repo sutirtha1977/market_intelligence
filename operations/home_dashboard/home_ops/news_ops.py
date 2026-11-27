@@ -5,7 +5,7 @@ import html
 import pandas as pd
 import streamlit as st
 
-from operations.home_dashboard.home_ops.home_data import get_news as get_static_news
+# from operations.home_dashboard.home_ops.home_data import get_news as get_static_news
 
 USE_LIVE_NEWS = True   # flip to False to fall back to static data
 NEWS_LIMIT = 15
@@ -42,9 +42,8 @@ def _get_items():
         try:
             return _load_live_news()
         except Exception:
-            pass   # fall through to static data
-    # static fallback (no links)
-    return [(t, "", ts) for t, ts in get_static_news()]
+            pass
+    return []
 
 
 def handle_news_section():
@@ -59,6 +58,12 @@ def handle_news_section():
         rows.append(
             f'<div class="news-item"><div>{t}</div>'
             f'<div class="t">{html.escape(ts)}</div></div>'
+        )
+
+    if not rows:
+        rows.append(
+            '<div class="news-item"><div>News is unavailable right now. '
+            'It will retry on the next refresh.</div></div>'
         )
 
     st.markdown(
