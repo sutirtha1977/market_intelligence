@@ -12,10 +12,6 @@ def load_header(progress_placeholder):
     from operations.home_dashboard.home_ops.market_ops import handle_header_section
     handle_header_section(progress_placeholder)
 
-def load_indices():
-    from operations.home_dashboard.home_ops.market_ops import handle_index_section
-    handle_index_section()
-
 def load_breadth():
     from operations.home_dashboard.home_ops.market_ops import handle_breadth_section
     handle_breadth_section()
@@ -37,17 +33,11 @@ if "busy" not in st.session_state:
 # ----------------------------------------------------------
 def handle_home_operations():
     progress_placeholder = st.empty()
-
     # UI styles (keep lightweight)
     load_styles()
-
     # ----------------------------------------------------------
     # FAST ROUTER
     # ----------------------------------------------------------
-    load_header(progress_placeholder)  # title + event countdown + VIX
-
-    load_indices()     # NIFTY / BANKNIFTY / ... cards
-
-    load_breadth()     # IN + US SMA breadth
-
-    load_news()        # market news feed
+    load_header(progress_placeholder)     
+    load_breadth()     
+    load_news()        

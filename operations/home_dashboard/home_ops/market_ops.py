@@ -1,15 +1,13 @@
 # operations/home_dashboard/home_ops/market_ops.py
-# Header (holiday + VIX), index cards and SMA breadth - all fed by ONE get_market_data() call.
+# Header (holiday + VIX) and SMA breadth - all fed by ONE get_market_data() call.
 
 from datetime import date, datetime
+from typing import Optional
 
 import streamlit as st
 
 from core.styles import COLOR_MAP
-from operations.home_dashboard.home_ops.home_data import (
-    SERIES_COLORS,
-    get_index_cards,
-)
+from operations.home_dashboard.home_ops.home_styles import SERIES_COLORS
 
 BREADTH_DAYS = 30
 
@@ -90,77 +88,48 @@ def _countdown_text(date_str: str) -> str:
 
 
 # ----------------------------------------------------------
-# HEADER SECTION
+# HEADER SECTION  (one slim strip: VIX | regime | next NSE holiday)
 # ----------------------------------------------------------
 def handle_header_section(progress_placeholder=None):
     data = _get_market_data(progress_placeholder)
 
-    # Next NSE holiday
-    hol = data.get("next_holiday")
-    if hol:
-        left_txt = _countdown_text(hol["date"])
-        left_html = f'{hol["name"]} &nbsp;·&nbsp; {hol["day"]}'
-        right_html = f'{left_txt} ({hol["date"]})' if left_txt else hol["date"]
-    else:
-        left_html, right_html = "No upcoming NSE holiday found", ""
-
-    st.markdown(
-        f"""
-<div class="card row">
-  <div class="event">🗓️&nbsp; NSE Holiday: {left_html}</div>
-  <div class="event" style="font-weight:500">{right_html}</div>
-</div>""",
-        unsafe_allow_html=True,
-    )
-    st.write("")
-
-    # VIX
+    # VIX group
     vix = _parse_vix(data.get("vix_data"))
     if vix:
         chg = vix["change"]
         chg_html = ""
         if chg is not None:
             cls = "neg" if chg < 0 else "pos"
-            chg_html = f'<span class="chg {cls}">({chg:+.2f})</span>'
-        left = f'🇮🇳 VIX {vix["value"]:.2f}{chg_html}'
-        right = vix["regime"]
+            chg_html = f'<span class="chg {cls}">{chg:+.2f}</span>'
+        tag_html = f'<span class="tag">{vix["regime"]}</span>' if vix["regime"] else ""
+        vix_html = (
+            f'<div class="grp"><span class="lbl">India VIX</span>'
+            f'<span class="val">{vix["value"]:.2f}</span>{chg_html}{tag_html}</div>'
+        )
     else:
-        left, right = "🇮🇳 VIX unavailable", ""
+        vix_html = '<div class="grp"><span class="lbl">India VIX</span><span class="txt muted">unavailable</span></div>'
+
+    # Holiday group
+    hol = data.get("next_holiday")
+    if hol:
+        left_txt = _countdown_text(hol["date"])
+        when = f'{left_txt} · {hol["date"]}' if left_txt else hol["date"]
+        hol_html = (
+            f'<div class="grp"><span class="lbl">Next NSE holiday</span>'
+            f'<span class="txt">{hol["name"]} <span class="muted">({hol["day"]})</span></span></div>'
+            f'<div class="grp grow"><span class="txt muted">{when}</span></div>'
+        )
+    else:
+        hol_html = (
+            '<div class="grp"><span class="lbl">Next NSE holiday</span>'
+            '<span class="txt muted">none found</span></div>'
+        )
 
     st.markdown(
-        f"""
-<div class="card row">
-  <div class="vix">{left}</div>
-  <div class="regime">{right}</div>
-</div>""",
+        f'<div class="card strip">{vix_html}<div class="sep"></div>{hol_html}</div>',
         unsafe_allow_html=True,
     )
     st.write("")
-
-
-# ----------------------------------------------------------
-# INDEX CARDS (still static)
-# ----------------------------------------------------------
-def _index_card(i: dict) -> str:
-    return f"""
-<div class="card idx {i['bias']}">
-  <div class="row"><div class="name">{i['name']}</div><div class="badge {i['bias']}">{i['bias']}</div></div>
-  <div class="metrics">
-    <span>OI <b>{i['oi']:.2f}</b></span>
-    <span>VOL <b>{i['vol']:.2f}</b></span>
-    <span>ΔOI <b>{i['doi']:.2f}</b></span>
-  </div>
-  <div class="expiry">Expiry: {i['expiry']}</div>
-</div>"""
-
-
-def handle_index_section():
-    cards = get_index_cards()
-    for start in range(0, len(cards), 4):
-        cols = st.columns(4)
-        for col, c in zip(cols, cards[start:start + 4]):
-            col.markdown(_index_card(c), unsafe_allow_html=True)
-        st.write("")
 
 
 # ----------------------------------------------------------
@@ -171,45 +140,47 @@ def _build_chart(rows: list):
     import plotly.graph_objects as go
 
     rows = list(reversed(rows[:BREADTH_DAYS]))        # DB is newest-first -> oldest-first
-    dates = [r["date"].strftime("%a, %d %b") if hasattr(r["date"], "strftime") else str(r["date"]) for r in rows]
+    dates = [r["date"].strftime("%d %b") if hasattr(r["date"], "strftime") else str(r["date"]) for r in rows]
 
     fig = go.Figure()
     for key, label in _BREADTH_KEYS.items():
         fig.add_trace(go.Scatter(
             x=dates, y=[r[key] for r in rows], name=label, mode="lines",
-            line=dict(color=SERIES_COLORS[label], width=2),
+            line=dict(color=SERIES_COLORS[label], width=1.5),
         ))
     fig.update_layout(
-        height=330, margin=dict(l=10, r=10, t=10, b=10),
+        height=240, margin=dict(l=8, r=8, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(orientation="v", x=1.01, y=1),
-        xaxis=dict(showgrid=True, gridcolor=COLOR_MAP["gray-10"], tickangle=-30, nticks=7),
-        yaxis=dict(showgrid=True, gridcolor=COLOR_MAP["gray-10"], range=[0, 100]),
+        font=dict(size=10, color=COLOR_MAP["text-secondary"]),
+        legend=dict(orientation="h", x=0, y=1.14, font=dict(size=10)),
+        hovermode="x unified",
+        xaxis=dict(showgrid=False, tickangle=0, nticks=6),
+        yaxis=dict(showgrid=True, gridcolor=COLOR_MAP["gray-10"], range=[0, 100], ticksuffix="%"),
     )
     return fig
 
 
-def _render_panel(col, flag: str, payload: dict, key: str):
+def _render_panel(col, flag: str, payload: Optional[dict], key: str):
     rows = (payload or {}).get("breadth") or []
     with col:
         if not rows:
             st.markdown(
-                f'<div class="card"><div class="sma-title">{flag} SMA Breadth</div>'
-                f'<div class="expiry" style="text-align:center">No breadth data available.</div></div>',
+                f'<div class="card"><div class="bh-title">{flag} SMA breadth</div>'
+                f'<div class="expiry">No breadth data available.</div></div>',
                 unsafe_allow_html=True,
             )
             return
 
         latest = rows[0]
-        pills = "".join(
-            f'<div class="pill {"" if latest[k] >= 50 else "bear"}"><div class="l">{label}</div>'
-            f'<div class="v">{latest[k]:.1f}%</div>'
-            f'<div class="s">{"Bullish" if latest[k] >= 50 else "Bearish"}</div></div>'
+        chips = "".join(
+            f'<span class="chip {"up" if latest[k] >= 50 else "down"}">'
+            f'<span class="k">{label}</span><span class="n">{latest[k]:.1f}%</span></span>'
             for k, label in _BREADTH_KEYS.items()
         )
         st.markdown(
-            f'<div class="card"><div class="sma-title">{flag} SMA Breadth (Last {BREADTH_DAYS} days)</div>'
-            f'<div class="pills">{pills}</div></div>',
+            f'<div class="card bh"><div class="bh-title">{flag} Stocks above moving average'
+            f'<span class="sub">last {BREADTH_DAYS} days</span></div>'
+            f'<div class="chips">{chips}</div></div>',
             unsafe_allow_html=True,
         )
         st.plotly_chart(_build_chart(rows), width="stretch",

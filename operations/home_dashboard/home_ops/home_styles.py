@@ -1,5 +1,5 @@
 # operations/home_dashboard/home_ops/home_styles.py
-# Home screen CSS - all colors / fonts / shadows come from core/styles.py
+# Home screen CSS - all colors / fonts come from core/styles.py
 
 import re
 
@@ -8,76 +8,67 @@ import streamlit as st
 from core.styles import (
     COLOR_MAP,
     FONT_FAMILY,
-    FONT_SIZE,
-    CARD_SHADOW,
-    CARD_SHADOW_HOVER,
 )
 
-# Tokens: {{color-key}} -> COLOR_MAP value, plus {{font}}, {{font-size}}, {{shadow}}, {{shadow-hover}}
+SERIES_COLORS = {
+    "EMA 10": COLOR_MAP["blue-60"],
+    "SMA 20": COLOR_MAP["orange-70"],
+    "SMA 50": COLOR_MAP["green-70"],
+    "SMA 200": COLOR_MAP["red-70"],
+}
+
+# Tokens: {{color-key}} -> COLOR_MAP value, plus {{font}}
+# Type scale: 10.5 / 11 / 12 / 13px. Cards are flat (border, no shadow).
 _CSS = """
 <style>
-    .card, .card * {font-family:{{font}};}
+    .card, .card * {font-family:{{font}}; font-variant-numeric:tabular-nums;}
     .card {
-        background:{{bg-card}}; border:1px solid {{card-border}}; border-radius:12px;
-        padding:14px 18px; box-shadow:{{shadow}}; color:{{text-primary}}; font-size:{{font-size}};
+        background:{{bg-card}}; border:1px solid {{card-border}}; border-radius:8px;
+        padding:10px 14px; color:{{text-primary}}; font-size:12px; line-height:1.35;
     }
 
-    /* hero */
-    .hero {background:linear-gradient(90deg,{{bg-surface}},{{hover-blue}}); padding:16px 20px;}
-    .hero h1 {margin:0; padding:0; font-size:1.45rem; font-weight:700; color:{{text-primary}}; display:flex; align-items:center; gap:12px;}
-    .hero h1:before {content:""; width:6px; height:24px; border-radius:4px; background:{{primary}}; display:inline-block;}
-
-    /* rows: event / vix */
-    .row {display:flex; justify-content:space-between; align-items:center;}
-    .event {font-weight:600; color:{{text-primary}}; font-size:.9rem;}
-    .vix {font-size:1.2rem; font-weight:700; color:{{blue-70}};}
-    .vix .chg {font-size:.85rem; margin-left:8px;}
+    /* ---------- summary strip: VIX + next holiday ---------- */
+    .strip {display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+    .strip .grp {display:flex; align-items:baseline; gap:8px;}
+    .strip .grow {margin-left:auto;}
+    .strip .sep {width:1px; align-self:stretch; background:{{border-light}};}
+    .strip .lbl {font-size:11px; color:{{text-secondary}};}
+    .strip .val {font-size:15px; font-weight:700; color:{{text-primary}};}
+    .strip .chg {font-size:11px; font-weight:600;}
+    .strip .txt {font-size:12px; font-weight:500; color:{{text-primary}};}
+    .strip .muted {color:{{text-secondary}};}
+    .tag {font-size:10.5px; font-weight:600; letter-spacing:.02em; color:{{text-secondary}};
+          background:{{gray-10}}; border:1px solid {{border-light}}; border-radius:4px; padding:1px 7px;}
     .neg {color:{{bearish}};} .pos {color:{{bullish}};}
-    .regime {font-weight:700; font-size:.8rem; letter-spacing:.04em; color:{{text-primary}};}
+    .expiry {color:{{text-secondary}}; font-size:11px;}
 
-    /* index cards */
-    .idx {border-left:5px solid; padding:12px 16px; transition:box-shadow .15s ease;}
-    .idx:hover {box-shadow:{{shadow-hover}};}
-    .idx.BULLISH {border-left-color:{{bullish}};}
-    .idx.NEUTRAL {border-left-color:{{signal-hold}};}
-    .idx.BEARISH {border-left-color:{{bearish}};}
-    .idx .name {color:{{blue-70}}; font-weight:700; font-size:.95rem;}
-    .badge {color:{{text-inverse}}; font-weight:700; padding:3px 10px; border-radius:5px; font-size:.7rem; letter-spacing:.03em;}
-    .badge.BULLISH {background:{{bullish}};}
-    .badge.NEUTRAL {background:{{signal-hold}};}
-    .badge.BEARISH {background:{{bearish}};}
-    .metrics {display:flex; justify-content:space-between; margin:10px 0 6px; font-size:.9rem; color:{{text-primary}};}
-    .expiry {color:{{text-secondary}}; font-size:.72rem;}
+    /* ---------- SMA breadth header: title + inline chips ---------- */
+    .bh {display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .bh-title {font-size:12px; font-weight:600; color:{{text-primary}};}
+    .bh-title .sub {font-weight:400; color:{{text-secondary}}; margin-left:6px;}
+    .chips {display:flex; gap:6px; flex-wrap:wrap;}
+    .chip {display:inline-flex; align-items:baseline; gap:5px; font-size:11px;
+           border:1px solid {{border-light}}; border-radius:4px; padding:2px 8px; background:{{bg-surface}};}
+    .chip .k {color:{{text-secondary}};}
+    .chip .n {font-weight:700;}
+    .chip.up {border-color:{{green-40}};}   .chip.up .n {color:{{bullish}};}
+    .chip.down {border-color:{{red-30}};}   .chip.down .n {color:{{bearish}};}
 
-    /* SMA breadth */
-    .sma-title {text-align:center; color:{{blue-70}}; font-weight:700; font-size:.9rem; margin-bottom:10px;}
-    .pills {display:grid; grid-template-columns:repeat(4,1fr); gap:10px;}
-    .pill {background:{{bullish-bg}}; border:2px solid {{green-40}}; border-radius:10px; text-align:center; padding:8px 4px;}
-    .pill .l {font-size:.78rem; font-weight:700; color:{{text-primary}};}
-    .pill .v {font-weight:700; font-size:1.05rem; color:{{bullish}}; margin:1px 0;}
-    .pill .s {color:{{bullish}}; font-weight:600; font-size:.72rem;}
-    .pill.bear {background:{{bearish-bg}}; border-color:{{red-30}};}
-    .pill.bear .v, .pill.bear .s {color:{{bearish}};}
-
-    /* news */
-    .news-head {display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {{border-light}}; padding-bottom:12px; margin-bottom:6px;}
-    .news-head h2 {margin:0; padding:0; color:{{blue-80}}; font-size:1.1rem; font-weight:700;}
-    .news-head span {font-size:.8rem; font-weight:600; color:{{text-primary}};}
-    .news-scroll {max-height:340px; overflow-y:auto; padding-right:8px;}
-    .news-item {display:flex; justify-content:space-between; gap:24px; padding:9px 8px; border-bottom:1px solid {{table-border}}; color:{{text-primary}}; font-size:.82rem;}
+    /* ---------- news ---------- */
+    .news-head {display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid {{border-light}}; padding-bottom:8px; margin-bottom:2px;}
+    .news-head h2 {margin:0; padding:0; color:{{text-primary}}; font-size:13px; font-weight:700;}
+    .news-head span {font-size:11px; color:{{text-secondary}};}
+    .news-scroll {max-height:300px; overflow-y:auto; padding-right:6px;}
+    .news-item {display:flex; justify-content:space-between; gap:20px; padding:6px 4px; border-bottom:1px solid {{table-border}}; color:{{text-primary}}; font-size:12px;}
+    .news-item:last-child {border-bottom:none;}
     .news-item:hover {background:{{hover-bg}};}
-    .news-item .t {color:{{text-muted}}; white-space:nowrap; font-size:.72rem;}
+    .news-item .t {color:{{text-muted}}; white-space:nowrap; font-size:11px;}
 </style>
 """
 
 
 def _build_css() -> str:
-    extra = {
-        "font": FONT_FAMILY,
-        "font-size": FONT_SIZE,
-        "shadow": CARD_SHADOW,
-        "shadow-hover": CARD_SHADOW_HOVER,
-    }
+    extra = {"font": FONT_FAMILY}
 
     def sub(m):
         key = m.group(1)

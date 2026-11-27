@@ -5,8 +5,6 @@ import html
 import pandas as pd
 import streamlit as st
 
-# from operations.home_dashboard.home_ops.home_data import get_news as get_static_news
-
 USE_LIVE_NEWS = True   # flip to False to fall back to static data
 NEWS_LIMIT = 15
 
