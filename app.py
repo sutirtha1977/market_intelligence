@@ -2,6 +2,7 @@
 
 import streamlit as st
 from streamlit_option_menu import option_menu
+from zoneinfo import ZoneInfo
 from html import escape
 from datetime import datetime
 
@@ -458,7 +459,14 @@ def render_section_header(
     safe_title = escape(str(title))
     safe_subtitle = escape(str(subtitle)) if subtitle else ""
     safe_icon = _icon_html(icon)
-    today = datetime.now().strftime("%d %b %Y")
+    # today = datetime.now().strftime("%d %b %Y")
+    now = datetime.now().astimezone()
+    ist_now = now.astimezone(ZoneInfo("Asia/Kolkata"))
+
+    today = (
+        f"{now.strftime('%A, %d %b %Y %Z')} "
+        f"| IST: {ist_now.strftime('%A, %d %b %Y %I:%M %p IST')}"
+    )
 
     st.html(f"""
         <div class="section-card">
@@ -502,7 +510,6 @@ def render_sidebar_menu():
         # "INDIA Equity",
         # "USA Equity",
         # "NSE Indices",
-        # "NSE FnO",
         # "Equity Signals",
         "Scanners",
         # "Strategy Builder",
@@ -515,7 +522,6 @@ def render_sidebar_menu():
         # "bar-chart-fill",
         # "currency-dollar",
         # "graph-up-arrow",
-        # "lightning-charge-fill",
         # "clock-history",
         "search-heart-fill",
         # "cpu-fill",
@@ -528,7 +534,6 @@ def render_sidebar_menu():
         # "INDIA Equity": "india_equity",
         # "USA Equity": "usa_equity",
         # "NSE Indices": "nse_index_overview",
-        # "NSE FnO": "derivative_dashboard",
         # "Equity Signals": "scanner_operations",
         "Scanners": "scanner_operations",
         # "Strategy Builder": "playground",
@@ -654,15 +659,6 @@ def render_content_box(menu):
     #     )
     #     from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
     #     handle_index_overview_operations()
-
-    # elif menu == "derivative_dashboard":
-    #     render_section_header(
-    #         "F&O INSIGHTS",
-    #         "Futures, options, and derivatives trading",
-    #         "lightning-fill"
-    #     )
-    #     from operations.derivatives_operations.derivative_ops import handle_derivative_operations
-    #     handle_derivative_operations()
 
     # elif menu == "scanner_operations":
     #     render_section_header(
