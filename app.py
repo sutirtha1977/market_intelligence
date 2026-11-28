@@ -2,7 +2,6 @@
 
 import streamlit as st
 from streamlit_option_menu import option_menu
-from zoneinfo import ZoneInfo
 from html import escape
 from datetime import datetime
 
@@ -459,12 +458,9 @@ def render_section_header(
     safe_title = escape(str(title))
     safe_subtitle = escape(str(subtitle)) if subtitle else ""
     safe_icon = _icon_html(icon)
-    now = datetime.now().astimezone()
-    ist_now = now.astimezone(ZoneInfo("Asia/Kolkata"))
 
     today = (
-        f"{now.strftime('%A, %d %b %Y %Z')} "
-        f"| IST: {ist_now.strftime('%A, %d %b %Y %I:%M %p IST')}"
+        f"{datetime.now().astimezone().strftime('%A, %d %b %Y %Z')} "
     )
 
     st.html(f"""
