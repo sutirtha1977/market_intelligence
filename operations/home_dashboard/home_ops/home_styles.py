@@ -20,7 +20,7 @@ _CSS = """
         padding:10px 14px; color:{{text-primary}}; font-size:12px; line-height:1.35;
     }
 
-    /* ---------- summary strip: holiday / VIX / SRT ---------- */
+    /* ---------- summary strip: holiday / VIX / USD-INR / Gold ---------- */
     .strip {display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
     .strip .grp {display:flex; align-items:baseline; gap:8px;}
     .strip .grow {margin-left:auto;}
@@ -31,9 +31,10 @@ _CSS = """
     .strip .txt {font-size:12px; font-weight:500; color:{{text-primary}};}
     .strip .muted {color:{{text-secondary}};}
 
-    /* equal-width columns (VIX | SRT) */
+    /* equal-width columns (VIX | USD/INR | Gold) */
     .strip.split {display:grid; grid-template-columns:1fr 1fr; gap:0; align-items:stretch;}
-    .strip.split .grp {padding:0 16px;}
+    .strip.split.c3 {grid-template-columns:repeat(3,minmax(0,1fr));}
+    .strip.split .grp {padding:0 16px; flex-wrap:wrap; row-gap:2px;}
     .strip.split .grp:first-child {padding-left:0;}
     .strip.split .grp + .grp {border-left:1px solid {{border-light}};}
 

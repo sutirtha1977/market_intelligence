@@ -7,6 +7,7 @@ from database.connection import get_db_connection_cm, get_engine
 from config.db_config import ASSET_TABLE_CONFIG
 import pandas as pd
 from pprint import pprint
+from psycopg2 import sql
 
 # --------------------------------------------------------------------------
 def get_latest_date(cur, price_table: str, timeframe: str):
@@ -23,6 +24,127 @@ def get_latest_date(cur, price_table: str, timeframe: str):
     except Exception as e:
         log(f"❌ Error in get_latest_date for {price_table}, {timeframe}: {e}")
         return None
+# --------------------------------------------------------------------------
+def get_latest_symbol_price(
+    asset_key: str,
+    symbol: str,
+    timeframe: str = "1d"
+) -> Optional[Dict]:
+    """
+    Fetch the latest available price record for a symbol.
+
+    Parameters
+    ----------
+    asset_key : str
+        Asset key from ASSET_TABLE_CONFIG.
+    symbol : str
+        Symbol to fetch, e.g. RELIANCE.NS, AAPL, NIFTY 50.
+    timeframe : str
+        Price timeframe: 1d, 1wk, 1mo, etc.
+
+    Returns
+    -------
+    Optional[Dict]
+        Latest price record or None if not found.
+    """
+
+    try:
+
+        # -------------------------------------------------
+        # VALIDATE INPUTS
+        # -------------------------------------------------
+
+        if not asset_key or not symbol:
+            log("❌ Missing asset_key or symbol")
+            return None
+
+        tables = ASSET_TABLE_CONFIG.get(asset_key)
+
+        if not tables:
+            log(f"❌ Invalid asset_key: {asset_key}")
+            return None
+
+        symbol_table = tables.get("symbol")
+        price_table = tables.get("price")
+
+        if not symbol_table or not price_table:
+            log(f"❌ Missing symbol/price table configuration: {asset_key}")
+            return None
+
+        # -------------------------------------------------
+        # FETCH LATEST PRICE
+        # -------------------------------------------------
+
+        query = sql.SQL("""
+            SELECT
+                s.symbol_id,
+                s.name,
+                s.symbol,
+                s.exchange,
+
+                p.timeframe,
+                p.date,
+
+                p.open,
+                p.high,
+                p.low,
+                p.close,
+                p.adj_close,
+
+                COALESCE(NULLIF(p.adj_close, 0), p.close)
+                    AS effective_close,
+
+                p.volume,
+                p.delv_pct,
+                p.pct_price_change
+
+            FROM {} s
+
+            JOIN {} p
+                ON p.symbol_id = s.symbol_id
+
+            WHERE UPPER(TRIM(s.symbol)) = UPPER(TRIM(%s))
+              AND p.timeframe = %s
+
+            ORDER BY p.date DESC
+
+            LIMIT 1
+        """).format(
+            sql.Identifier(symbol_table),
+            sql.Identifier(price_table)
+        )
+        with get_db_connection_cm() as conn:
+
+            with conn.cursor() as cur:
+
+                cur.execute(query, (symbol, timeframe))
+
+                row = cur.fetchone()
+
+                if not row:
+                    log(
+                        f"⚠️ No price data found for "
+                        f"{asset_key} / {symbol} / {timeframe}"
+                    )
+                    return None
+
+                description = cur.description
+                if description is None:
+                    raise RuntimeError("Query returned no column metadata")
+
+                columns = [desc[0] for desc in description]
+
+                return dict(zip(columns, row))
+
+    except Exception as e:
+
+        log(
+            f"❌ Error fetching latest price for "
+            f"{asset_key} / {symbol}: {e}"
+        )
+
+        return None
+
 # --------------------------------------------------------------------------
 def fetch_next_nse_holiday(cur) -> Optional[Dict]:
     try:
@@ -309,32 +431,12 @@ def get_market_data() -> Dict:
     try:
         with get_db_connection_cm() as conn:
             with conn.cursor() as cur:
-                # tables_india = ASSET_TABLE_CONFIG["yahoo_india_equity"]
-                # india_symbol = tables_india["symbol"]
-                # india_price = tables_india["price"]
-                # india_indicator = tables_india["indicator"]
-                # india_data = fetch_sma_breadth_ratio_range(
-                #     cur,
-                #     india_price,
-                #     india_indicator,
-                #     india_symbol
-                # )
-                # dashboard["india_sma_breadth"] = india_data
-                # tables_usa = ASSET_TABLE_CONFIG["yahoo_usa_equity"]
-                # usa_symbol = tables_usa["symbol"]
-                # usa_price = tables_usa["price"]
-                # usa_indicator = tables_usa["indicator"]
-                # usa_data = fetch_sma_breadth_ratio_range(
-                #     cur,
-                #     usa_price,
-                #     usa_indicator,
-                #     usa_symbol
-                # )
-                # dashboard["usa_sma_breadth"] = usa_data
                 dashboard["vix_data"] = get_vix_last_n_days_new(cur, 1)
                 dashboard["next_holiday"] = fetch_next_nse_holiday(cur)
                 dashboard["nifty50_srt"] = get_index_srt("NIFTY 50")
                 dashboard["all_index_srt"] = get_all_index_srt()
+                dashboard["USD/INR"] = get_latest_symbol_price("yahoo_forex", "USDINR=X", "1d")
+                dashboard["GOLD"] = get_latest_symbol_price("yahoo_commodity", "GC=F", "1d")
                 # print("\n========== MARKET DASHBOARD DATA ==========")
                 # pprint(dashboard, sort_dicts=False, width=120)
                 # print("============================================\n")
@@ -662,7 +764,11 @@ def get_yahoo_data_snapshot(asset_key: str) -> List[Dict]:
                 if not rows:
                     return []
 
-                columns = [desc[0] for desc in cur.description]
+                description = cur.description
+                if description is None:
+                    raise RuntimeError("Query returned no column metadata")
+
+                columns = [desc[0] for desc in description]
 
                 return [dict(zip(columns, r)) for r in rows]
 

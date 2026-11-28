@@ -1,11 +1,17 @@
 # operations/home_dashboard/home_ops/market_ops.py
-# Header (holiday + VIX + SRT) - fed by ONE get_market_data() call.
+# Header (holiday + VIX + USD/INR + Gold) - fed by ONE get_market_data() call.
 
-import html
+import math
 from datetime import date, datetime
 from typing import Optional
 
 import streamlit as st
+
+# Quote tiles on line 2 after VIX: (key in market data, label, value prefix)
+_QUOTES = [
+    ("USD/INR", "USD/INR", ""),
+    ("GOLD", "Gold", "$"),
+]
 
 
 # ----------------------------------------------------------
@@ -61,24 +67,40 @@ def _parse_vix(raw):
 
 
 # ----------------------------------------------------------
-# NIFTY 50 SRT
+# PRICE QUOTES (USD/INR, Gold)
 # ----------------------------------------------------------
-def _parse_srt(raw: Optional[dict]):
-    if not isinstance(raw, dict) or raw.get("srt") is None:
-        return None
+def _num(x) -> Optional[float]:
     try:
-        value = float(raw["srt"])
+        f = float(x)
     except (TypeError, ValueError):
         return None
+    return f if math.isfinite(f) else None
 
-    d = raw.get("date")
-    as_of = d.strftime("%d %b") if isinstance(d, date) else (str(d) if d else "")
 
-    return {
-        "name": str(raw.get("index_name") or "Nifty 50"),
-        "value": value,
-        "as_of": as_of,
-    }
+def _parse_quote(raw: Optional[dict]):
+    """raw = one price row (adj_close, close, pct_price_change, ...) -> {'value','pct'} or None."""
+    if not isinstance(raw, dict):
+        return None
+    value = _num(raw.get("adj_close")) or _num(raw.get("close"))   # adj_close 0 / missing -> close
+    if value is None:
+        return None
+    return {"value": value, "pct": _num(raw.get("pct_price_change"))}
+
+
+def _quote_group(label: str, prefix: str, q: Optional[dict]) -> str:
+    if not q:
+        return (
+            f'<div class="grp"><span class="lbl">{label}</span>'
+            f'<span class="txt muted">unavailable</span></div>'
+        )
+    pct_html = ""
+    if q["pct"] is not None:
+        cls = "neg" if q["pct"] < 0 else "pos"
+        pct_html = f'<span class="chg {cls}">{q["pct"]:+.2f}%</span>'
+    return (
+        f'<div class="grp"><span class="lbl">{label}</span>'
+        f'<span class="val">{prefix}{q["value"]:,.2f}</span>{pct_html}</div>'
+    )
 
 
 # ----------------------------------------------------------
@@ -98,7 +120,7 @@ def _countdown_text(date_str: str) -> str:
 # ----------------------------------------------------------
 # HEADER SECTION
 #   line 1: next NSE holiday
-#   line 2: India VIX | Nifty 50 SRT (equal-width columns)
+#   line 2: India VIX | USD/INR | Gold (equal-width columns)
 # ----------------------------------------------------------
 def handle_header_section(progress_placeholder=None):
     data = _get_market_data(progress_placeholder)
@@ -122,7 +144,7 @@ def handle_header_section(progress_placeholder=None):
     st.markdown(f'<div class="card strip">{hol_html}</div>', unsafe_allow_html=True)
     st.write("")
 
-    # ---------- Line 2: India VIX | Nifty 50 SRT ----------
+    # ---------- Line 2: India VIX | USD/INR | Gold ----------
     vix = _parse_vix(data.get("vix_data"))
     if vix:
         chg = vix["change"]
@@ -138,18 +160,13 @@ def handle_header_section(progress_placeholder=None):
     else:
         vix_html = '<div class="grp"><span class="lbl">India VIX</span><span class="txt muted">unavailable</span></div>'
 
-    srt = _parse_srt(data.get("nifty50_srt"))
-    if srt:
-        as_of = f'<span class="lbl">as of {srt["as_of"]}</span>' if srt["as_of"] else ""
-        srt_html = (
-            f'<div class="grp"><span class="lbl">{html.escape(srt["name"])} SRT</span>'
-            f'<span class="val">{srt["value"]:.2f}</span>{as_of}</div>'
-        )
-    else:
-        srt_html = '<div class="grp"><span class="lbl">Nifty 50 SRT</span><span class="txt muted">unavailable</span></div>'
+    quotes_html = "".join(
+        _quote_group(label, prefix, _parse_quote(data.get(key)))
+        for key, label, prefix in _QUOTES
+    )
 
     st.markdown(
-        f'<div class="card strip split">{vix_html}{srt_html}</div>',
+        f'<div class="card strip split c3">{vix_html}{quotes_html}</div>',
         unsafe_allow_html=True,
     )
     st.write("")
