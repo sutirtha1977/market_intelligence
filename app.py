@@ -504,7 +504,7 @@ def render_sidebar_menu():
         # "Global Trends",
         # "INDIA Equity",
         # "USA Equity",
-        # "NSE Indices",
+        "NSE Indices",
         # "Equity Signals",
         "Scanners",
         # "Strategy Builder",
@@ -516,7 +516,7 @@ def render_sidebar_menu():
         # "globe",
         # "bar-chart-fill",
         # "currency-dollar",
-        # "graph-up-arrow",
+        "graph-up-arrow",
         # "clock-history",
         "search-heart-fill",
         # "cpu-fill",
@@ -528,7 +528,7 @@ def render_sidebar_menu():
         # "Global Trends": "global_overview",
         # "INDIA Equity": "india_equity",
         # "USA Equity": "usa_equity",
-        # "NSE Indices": "nse_index_overview",
+        "NSE Indices": "nse_index_overview",
         # "Equity Signals": "scanner_operations",
         "Scanners": "scanner_operations",
         # "Strategy Builder": "playground",
@@ -646,14 +646,14 @@ def render_content_box(menu):
     #     from operations.main_dashboard.equity_view import equity_view
     #     equity_view(asset_key="yahoo_usa_equity", region_prefix="usa")
 
-    # elif menu == "nse_index_overview":
-    #     render_section_header(
-    #         "INDEX TRACKING",
-    #         "India's national stock exchange indices",
-    #         "graph-up-arrow"
-    #     )
-    #     from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
-    #     handle_index_overview_operations()
+    elif menu == "nse_index_overview":
+        render_section_header(
+            "INDEX TRACKING",
+            "India's national stock exchange indices",
+            "graph-up-arrow"
+        )
+        # from operations.nse_dashboard.nse_dashboard_engine import handle_index_overview_operations
+        # handle_index_overview_operations()
 
     # elif menu == "scanner_operations":
     #     render_section_header(
