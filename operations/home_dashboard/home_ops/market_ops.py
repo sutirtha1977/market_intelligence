@@ -1,5 +1,5 @@
 # operations/home_dashboard/home_ops/market_ops.py
-# Header (holiday + VIX + SRT) and SMA breadth - all fed by ONE get_market_data() call.
+# Header (holiday + VIX + SRT) - fed by ONE get_market_data() call.
 
 import html
 from datetime import date, datetime
@@ -7,17 +7,9 @@ from typing import Optional
 
 import streamlit as st
 
-from core.styles import COLOR_MAP
-from operations.home_dashboard.home_ops.home_styles import SERIES_COLORS
-
-BREADTH_DAYS = 30
-
-# DB keys -> display labels
-_BREADTH_KEYS = {"ema10": "EMA 10", "sma20": "SMA 20", "sma50": "SMA 50", "sma200": "SMA 200"}
-
 
 # ----------------------------------------------------------
-# SINGLE DATA LOADER (shared by header + breadth)
+# SINGLE DATA LOADER
 # ----------------------------------------------------------
 @st.cache_data(ttl=900, show_spinner=False)   # EOD data, so 15 minutes is plenty
 def _load_market_data() -> dict:
@@ -161,65 +153,3 @@ def handle_header_section(progress_placeholder=None):
         unsafe_allow_html=True,
     )
     st.write("")
-
-
-# ----------------------------------------------------------
-# SMA BREADTH SECTION
-# ----------------------------------------------------------
-def _build_chart(rows: list):
-    # IMPORTANT: lazy import - plotly is heavy
-    import plotly.graph_objects as go
-
-    rows = list(reversed(rows[:BREADTH_DAYS]))        # DB is newest-first -> oldest-first
-    dates = [r["date"].strftime("%d %b") if hasattr(r["date"], "strftime") else str(r["date"]) for r in rows]
-
-    fig = go.Figure()
-    for key, label in _BREADTH_KEYS.items():
-        fig.add_trace(go.Scatter(
-            x=dates, y=[r[key] for r in rows], name=label, mode="lines",
-            line=dict(color=SERIES_COLORS[label], width=1.5),
-        ))
-    fig.update_layout(
-        height=240, margin=dict(l=8, r=8, t=8, b=8),
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(size=10, color=COLOR_MAP["text-secondary"]),
-        legend=dict(orientation="h", x=0, y=1.14, font=dict(size=10)),
-        hovermode="x unified",
-        xaxis=dict(showgrid=False, tickangle=0, nticks=6),
-        yaxis=dict(showgrid=True, gridcolor=COLOR_MAP["gray-10"], range=[0, 100], ticksuffix="%"),
-    )
-    return fig
-
-
-def _render_panel(col, flag: str, payload: Optional[dict], key: str):
-    rows = (payload or {}).get("breadth") or []
-    with col:
-        if not rows:
-            st.markdown(
-                f'<div class="card"><div class="bh-title">{flag} SMA breadth</div>'
-                f'<div class="expiry">No breadth data available.</div></div>',
-                unsafe_allow_html=True,
-            )
-            return
-
-        latest = rows[0]
-        chips = "".join(
-            f'<span class="chip {"up" if latest[k] >= 50 else "down"}">'
-            f'<span class="k">{label}</span><span class="n">{latest[k]:.1f}%</span></span>'
-            for k, label in _BREADTH_KEYS.items()
-        )
-        st.markdown(
-            f'<div class="card bh"><div class="bh-title">{flag} Stocks above moving average'
-            f'<span class="sub">last {BREADTH_DAYS} days</span></div>'
-            f'<div class="chips">{chips}</div></div>',
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(_build_chart(rows), width="stretch",
-                        config={"displayModeBar": False}, key=key)
-
-
-def handle_breadth_section():
-    data = _get_market_data()
-    left, right = st.columns(2)
-    _render_panel(left, "🇮🇳", data.get("india_sma_breadth") or {}, "breadth_IN")
-    _render_panel(right, "🇺🇸", data.get("usa_sma_breadth") or {}, "breadth_US")

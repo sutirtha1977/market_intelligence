@@ -548,3 +548,61 @@ def get_index_srt(index_name, timeframe=TIMEFRAME):
         log(f"❌ Error fetching SRT for {index_name}: {e}")
         return None
 # --------------------------------------------------------------------------
+def get_all_index_srt(timeframe=TIMEFRAME):
+    """
+    Retrieve the latest SRT value for all indices,
+    excluding India VIX.
+
+    Args:
+        timeframe: Data timeframe (default: 1d).
+
+    Returns:
+        List of dictionaries containing index_name, date and srt.
+    """
+
+    try:
+        tables = ASSET_TABLE_CONFIG["nse_india_index"]
+
+        symbols_table = tables["symbol"]
+        srt_table = tables["srt"]
+
+        with get_db_connection_cm() as conn:
+            with conn.cursor() as cur:
+
+                cur.execute(
+                    f"""
+                    SELECT DISTINCT ON (srt.index_id)
+                        s.name AS index_name,
+                        srt.date,
+                        srt.srt
+                    FROM {srt_table} srt
+                    JOIN {symbols_table} s
+                        ON s.symbol_id = srt.index_id
+                    WHERE srt.timeframe = %s
+                      AND UPPER(TRIM(s.name)) <> 'INDIA VIX'
+                    ORDER BY
+                        srt.index_id,
+                        srt.date DESC
+                    """,
+                    (timeframe,)
+                )
+
+                rows = cur.fetchall()
+
+                if not rows:
+                    log(f"No index SRT data found for timeframe: {timeframe}")
+                    return []
+
+                return [
+                    {
+                        "index_name": row[0],
+                        "date": row[1],
+                        "srt": row[2]
+                    }
+                    for row in rows
+                ]
+
+    except Exception as e:
+        log(f"❌ Error fetching all index SRT: {e}")
+        return []
+# --------------------------------------------------------------------------

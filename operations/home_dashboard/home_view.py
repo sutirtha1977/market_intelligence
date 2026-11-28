@@ -12,9 +12,9 @@ def load_header(progress_placeholder):
     from operations.home_dashboard.home_ops.market_ops import handle_header_section
     handle_header_section(progress_placeholder)
 
-def load_breadth():
-    from operations.home_dashboard.home_ops.market_ops import handle_breadth_section
-    handle_breadth_section()
+def load_srt():
+    from operations.home_dashboard.home_ops.srt_ops import handle_srt_section
+    handle_srt_section()
 
 def load_news():
     from operations.home_dashboard.home_ops.news_ops import handle_news_section
@@ -39,5 +39,5 @@ def handle_home_operations():
     # ----------------------------------------------------------
     with st.spinner("Loading market data...", show_time=True):
         load_header(None)
-    load_breadth()     
+    load_srt()
     load_news()

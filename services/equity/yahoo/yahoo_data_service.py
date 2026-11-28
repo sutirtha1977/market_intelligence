@@ -303,37 +303,38 @@ def get_equity_dashboard_data(
 # --------------------------------------------------------------------------
 def get_market_data() -> Dict:
     from services.index.vix_service import get_vix_last_n_days_new
-    from services.index.nse_data_service import get_index_srt
+    from services.index.nse_data_service import get_index_srt, get_all_index_srt
 
     dashboard: Dict = {}
     try:
         with get_db_connection_cm() as conn:
             with conn.cursor() as cur:
-                tables_india = ASSET_TABLE_CONFIG["yahoo_india_equity"]
-                india_symbol = tables_india["symbol"]
-                india_price = tables_india["price"]
-                india_indicator = tables_india["indicator"]
-                india_data = fetch_sma_breadth_ratio_range(
-                    cur,
-                    india_price,
-                    india_indicator,
-                    india_symbol
-                )
-                dashboard["india_sma_breadth"] = india_data
-                tables_usa = ASSET_TABLE_CONFIG["yahoo_usa_equity"]
-                usa_symbol = tables_usa["symbol"]
-                usa_price = tables_usa["price"]
-                usa_indicator = tables_usa["indicator"]
-                usa_data = fetch_sma_breadth_ratio_range(
-                    cur,
-                    usa_price,
-                    usa_indicator,
-                    usa_symbol
-                )
-                dashboard["usa_sma_breadth"] = usa_data
+                # tables_india = ASSET_TABLE_CONFIG["yahoo_india_equity"]
+                # india_symbol = tables_india["symbol"]
+                # india_price = tables_india["price"]
+                # india_indicator = tables_india["indicator"]
+                # india_data = fetch_sma_breadth_ratio_range(
+                #     cur,
+                #     india_price,
+                #     india_indicator,
+                #     india_symbol
+                # )
+                # dashboard["india_sma_breadth"] = india_data
+                # tables_usa = ASSET_TABLE_CONFIG["yahoo_usa_equity"]
+                # usa_symbol = tables_usa["symbol"]
+                # usa_price = tables_usa["price"]
+                # usa_indicator = tables_usa["indicator"]
+                # usa_data = fetch_sma_breadth_ratio_range(
+                #     cur,
+                #     usa_price,
+                #     usa_indicator,
+                #     usa_symbol
+                # )
+                # dashboard["usa_sma_breadth"] = usa_data
                 dashboard["vix_data"] = get_vix_last_n_days_new(cur, 1)
                 dashboard["next_holiday"] = fetch_next_nse_holiday(cur)
                 dashboard["nifty50_srt"] = get_index_srt("NIFTY 50")
+                dashboard["all_index_srt"] = get_all_index_srt()
                 # print("\n========== MARKET DASHBOARD DATA ==========")
                 # pprint(dashboard, sort_dicts=False, width=120)
                 # print("============================================\n")
