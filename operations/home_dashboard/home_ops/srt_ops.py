@@ -1,12 +1,13 @@
 # operations/home_dashboard/home_ops/srt_ops.py
-# Index SRT heatmap: grouped tiles, tinted by distance from the reference level (1.00),
-# plus a summary line and leaders / laggards. Reads data["all_index_srt"].
+# Index SRT heatmap: tiles grouped by the dataset's own index segment, tinted by distance
+# from the reference level (1.00), plus a summary line and leaders / laggards.
+# Reads data["all_index_srt"]: [{'index_name', 'segment', 'date', 'srt'}, ...]
 
 import html
 import re
 import statistics
 from datetime import date
-from typing import List, Optional
+from typing import List
 
 import streamlit as st
 
@@ -19,28 +20,12 @@ from operations.home_dashboard.home_ops.market_ops import _get_market_data
 SRT_NEUTRAL = 1.00        # reference level: above = green tint, below = red tint
 SRT_FULL_SCALE = 0.12     # |SRT - 1.00| at which the tint is strongest
 LEADERS_N = 5
+WIDE_GROUP_MIN = 17       # groups with at least this many tiles span the full width
 
-# Group membership (exact index names). Anything not listed falls into "Thematic".
-_GROUPS = [
-    ("Broad market", [
-        "Nifty 50", "Nifty Next 50", "Nifty 100", "Nifty 200",
-        "Nifty Total Market", "Nifty 500",
-    ]),
-    ("Market-cap segments", [
-        "Nifty Midcap 50", "Nifty Midcap Select", "Nifty Midcap 100",
-        "Nifty Smallcap 50", "Nifty Smallcap 100", "Nifty Smallcap 250", "Nifty Smallcap 500",
-        "Nifty Microcap 250", "Nifty LargeMidcap 250", "Nifty MidSmallcap 400",
-    ]),
-    ("Sectoral", [
-        "Nifty Auto", "Nifty Bank", "Nifty Cement", "Nifty Chemicals",
-        "Nifty Financial Services", "Nifty FMCG", "Nifty IT", "Nifty Media",
-        "Nifty Metal", "Nifty Pharma", "Nifty Private Bank", "Nifty PSU Bank",
-        "Nifty Realty", "Nifty Consumer Durables", "Nifty Oil and Gas",
-        "Nifty500 Healthcare", "Nifty Capital Markets",
-    ]),
-]
-_THEMATIC = "Thematic"
-_FULL_NAME_GROUPS = {"Broad market", "Market-cap segments"}   # keep the "Nifty " prefix here
+_SEGMENT_KEYS = ("segment", "index_segment", "index_segments")   # first one present wins
+_SEGMENT_ORDER = ["Broad Market Index", "Derivative Index", "Sectoral Index", "Thematic Index", "Strategy Index"]
+_OTHER = "Other"
+_FULL_NAME_SEGMENTS = ("broad", "derivative")   # keep the "Nifty " prefix on these tiles
 
 
 # ----------------------------------------------------------
@@ -65,20 +50,20 @@ def _clean(rows) -> List[dict]:
         name = str(r.get("index_name") or "").strip()
         if not name:
             continue
+        segment = next((str(r[k]).strip() for k in _SEGMENT_KEYS if r.get(k)), "") or _OTHER
         d = r.get("date")
-        out.append({"name": name, "srt": srt, "date": d if isinstance(d, date) else None})
+        out.append({"name": name, "srt": srt, "segment": segment, "date": d if isinstance(d, date) else None})
     return out
 
 
-def _group_of(name: str) -> str:
-    for group, names in _GROUPS:
-        if name in names:
-            return group
-    return _THEMATIC
+def _segment_title(segment: str) -> str:
+    return re.sub(r"\s+Index$", "", segment) or segment
 
 
-def _short(name: str, group: str) -> str:
-    return name if group in _FULL_NAME_GROUPS else (re.sub(r"^Nifty\s*", "", name) or name)
+def _short(name: str, segment: str) -> str:
+    if any(k in segment.lower() for k in _FULL_NAME_SEGMENTS):
+        return name
+    return re.sub(r"^Nifty\s*", "", name) or name
 
 
 def _state(v: float) -> str:
@@ -96,15 +81,15 @@ def _tile_bg(v: float) -> str:
     return _rgba(base, 0.10 + 0.40 * min(abs(d) / SRT_FULL_SCALE, 1.0))
 
 
-def _tile(row: dict, group: str, stale: bool) -> str:
-    full = html.escape(row["name"])
+def _tile(row: dict) -> str:
+    stale = row["stale"]
     when = row["date"].strftime("%d %b %Y") if row["date"] else "n/a"
-    tip = f'{full} · SRT {row["srt"]:.2f} · {when}' + (" · stale" if stale else "")
+    tip = f'{html.escape(row["name"])} · {html.escape(_segment_title(row["segment"]))} · SRT {row["srt"]:.2f} · {when}'
+    tip += " · stale" if stale else ""
     style = "" if stale else f'style="background:{_tile_bg(row["srt"])}"'
-    cls = "srt-tile stale" if stale else "srt-tile"
     return (
-        f'<div class="{cls}" {style} title="{tip}">'
-        f'<span class="n">{html.escape(_short(row["name"], group))}</span>'
+        f'<div class="srt-tile{" stale" if stale else ""}" {style} title="{tip}">'
+        f'<span class="n">{html.escape(_short(row["name"], row["segment"]))}</span>'
         f'<span class="v">{row["srt"]:.2f}</span></div>'
     )
 
@@ -115,10 +100,16 @@ def _chip(label: str, value: str, kind: str = "") -> str:
 
 def _rank_row(label: str, rows: List[dict]) -> str:
     chips = "".join(
-        _chip(html.escape(_short(r["name"], _group_of(r["name"]))), f'{r["srt"]:.2f}', _state(r["srt"]))
+        _chip(html.escape(_short(r["name"], r["segment"])), f'{r["srt"]:.2f}', _state(r["srt"]))
         for r in rows
     )
     return f'<div class="srt-rank"><span class="rl">{label}</span><div class="chips">{chips}</div></div>'
+
+
+def _segment_sort_key(segment: str):
+    if segment in _SEGMENT_ORDER:
+        return (0, _SEGMENT_ORDER.index(segment), segment)
+    return (2, 0, segment) if segment == _OTHER else (1, 0, segment)
 
 
 # ----------------------------------------------------------
@@ -126,12 +117,17 @@ def _rank_row(label: str, rows: List[dict]) -> str:
 # ----------------------------------------------------------
 def handle_srt_section():
     data = _get_market_data()
-    rows = _clean(data.get("all_index_srt"))
+    raw = data.get("all_index_srt")
+    rows = _clean(raw)
 
     if not rows:
+        hint = (
+            "SRT rows were returned without numeric values. Each row needs "
+            "index_name, segment, date and srt."
+            if raw else "No SRT data available."
+        )
         st.markdown(
-            '<div class="card"><div class="srt-title">Index SRT</div>'
-            '<div class="expiry">No SRT data available.</div></div>',
+            f'<div class="card"><div class="srt-title">Index SRT</div><div class="expiry">{hint}</div></div>',
             unsafe_allow_html=True,
         )
         st.write("")
@@ -164,26 +160,24 @@ def handle_srt_section():
     leaders = _rank_row("Leaders", ranked[:LEADERS_N])
     laggards = _rank_row("Laggards", list(reversed(ranked[-LEADERS_N:])))
 
-    # Groups, each sorted high -> low (stale tiles sink to the end)
-    buckets = {g: [] for g, _ in _GROUPS}
-    buckets[_THEMATIC] = []
+    # Groups = the dataset's own segments; each sorted high -> low (stale tiles sink to the end)
+    buckets = {}
     for r in rows:
-        buckets[_group_of(r["name"])].append(r)
+        buckets.setdefault(r["segment"], []).append(r)
 
     blocks = []
-    for group in [g for g, _ in _GROUPS] + [_THEMATIC]:
-        items = sorted(buckets[group], key=lambda r: (r["stale"], -r["srt"]))
-        if not items:
-            continue
-        tiles = "".join(_tile(r, group, r["stale"]) for r in items)
+    for segment in sorted(buckets, key=_segment_sort_key):
+        items = sorted(buckets[segment], key=lambda r: (r["stale"], -r["srt"]))
+        wide = " wide" if len(items) >= WIDE_GROUP_MIN else ""
+        tiles = "".join(_tile(r) for r in items)
         blocks.append(
-            f'<div class="srt-group"><div class="srt-gt">{group}<span class="cnt">{len(items)}</span></div>'
-            f'<div class="srt-grid">{tiles}</div></div>'
+            f'<div class="srt-group{wide}"><div class="srt-gt">{html.escape(_segment_title(segment))}'
+            f'<span class="cnt">{len(items)}</span></div><div class="srt-grid">{tiles}</div></div>'
         )
 
     note = (
         f'Tiles are tinted by distance from {SRT_NEUTRAL:.2f} (green above, red below). '
-        f'Sorted high to low within each group.'
+        f'Sorted high to low within each segment.'
     )
     if stale:
         names = ", ".join(

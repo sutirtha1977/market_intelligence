@@ -60,6 +60,7 @@ _CSS = """
     .srt-rank {display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;}
     .srt-rank .rl {font-size:11px; color:{{text-secondary}}; min-width:56px;}
     .srt-groups {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 22px; margin-top:12px;}
+    .srt-group.wide {grid-column:1 / -1;}
     .srt-gt {font-size:10.5px; font-weight:600; color:{{text-secondary}}; text-transform:uppercase;
              letter-spacing:.06em; margin-bottom:5px;}
     .srt-gt .cnt {font-weight:400; margin-left:6px; color:{{text-muted}};}

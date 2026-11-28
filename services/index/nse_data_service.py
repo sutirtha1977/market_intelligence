@@ -557,7 +557,7 @@ def get_all_index_srt(timeframe=TIMEFRAME):
         timeframe: Data timeframe (default: 1d).
 
     Returns:
-        List of dictionaries containing index_name, date and srt.
+        List of dictionaries containing index_name, index_segment, date and srt.
     """
 
     try:
@@ -573,6 +573,7 @@ def get_all_index_srt(timeframe=TIMEFRAME):
                     f"""
                     SELECT DISTINCT ON (srt.index_id)
                         s.name AS index_name,
+                        s.exchange AS index_segment,
                         srt.date,
                         srt.srt
                     FROM {srt_table} srt
@@ -596,8 +597,9 @@ def get_all_index_srt(timeframe=TIMEFRAME):
                 return [
                     {
                         "index_name": row[0],
-                        "date": row[1],
-                        "srt": row[2]
+                        "index_segment": row[1],
+                        "date": row[2],
+                        "srt": row[3],
                     }
                     for row in rows
                 ]
