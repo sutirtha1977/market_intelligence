@@ -443,15 +443,18 @@ def run_rs_engine(
 
                         r.date,
 
-                        round(float(r.rs), 2)
+                        # round(float(r.rs), 2)
+                        float(r.rs)
                         if pd.notna(r.rs)
                         else None,
 
-                        round(float(r.rs_ma), 2)
+                        # round(float(r.rs_ma), 2)
+                        float(r.rs_ma)
                         if pd.notna(r.rs_ma)
                         else None,
 
-                        round(float(r.rs_slope), 2)
+                        # round(float(r.rs_slope), 2)
+                        float(r.rs_slope)
                         if pd.notna(r.rs_slope)
                         else None,
 

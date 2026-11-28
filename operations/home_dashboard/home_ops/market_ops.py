@@ -32,16 +32,10 @@ def _load_market_data() -> dict:
 
 
 def _get_market_data(progress_placeholder=None) -> dict:
-    if progress_placeholder is not None:
-        progress_placeholder.progress(0.0, text="Loading market data...")
-
     try:
         return _load_market_data()
     except Exception:
         return {}
-    finally:
-        if progress_placeholder is not None:
-            progress_placeholder.empty()
 
 
 # ----------------------------------------------------------

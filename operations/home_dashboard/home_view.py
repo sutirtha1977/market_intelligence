@@ -32,12 +32,12 @@ if "busy" not in st.session_state:
 # MAIN
 # ----------------------------------------------------------
 def handle_home_operations():
-    progress_placeholder = st.empty()
     # UI styles (keep lightweight)
     load_styles()
     # ----------------------------------------------------------
     # FAST ROUTER
     # ----------------------------------------------------------
-    load_header(progress_placeholder)     
+    with st.spinner("Loading market data...", show_time=True):
+        load_header(None)
     load_breadth()     
-    load_news()        
+    load_news()
